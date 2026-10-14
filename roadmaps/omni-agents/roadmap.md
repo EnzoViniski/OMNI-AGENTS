@@ -2808,5 +2808,14 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
   - "Acesso remoto".
 - [x] Verificado antes do commit: typecheck, front 370, workspace Rust (22/41/82/3), `cargo check` do
   Tauri.
-- [ ] Publicar o rascunho do CI como release normal e conferir `releases/latest/download/latest.json`.
+- [x] Publicada como release normal (não pre-release, marcada como latest):
+  https://github.com/FelipeCamposM/OMNI-AGENTS/releases/tag/v0.6.0.
+  - `releases/latest/download/latest.json` → 0.6.0, assinatura presente, instalador Windows HTTP 200.
+- [x] CI do commit da release falhou no Ubuntu (370 testes passaram, 1 erro não tratado). O teste
+  novo da lateral montava o `DockerPanel` com o Tauri simulado, que devolve itens sem `name`, e o
+  `sort` quebrava. Corrigido em `38becc4`:
+  - `groupByCompose` tolera campos faltando e o painel descarta lista inválida;
+  - o teste simula o painel;
+  - teste novo "resposta estranha do docker não derruba o painel".
+  - CI verde nas três plataformas. A release não foi refeita: com o docker real o caso não ocorre.
 - Pendente antigo: actions do GitHub em Node 20 (depreciado).
