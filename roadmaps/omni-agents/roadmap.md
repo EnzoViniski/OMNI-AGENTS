@@ -2819,3 +2819,33 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
   - teste novo "resposta estranha do docker não derruba o painel".
   - CI verde nas três plataformas. A release não foi refeita: com o docker real o caso não ocorre.
 - Pendente antigo: actions do GitHub em Node 20 (depreciado).
+
+## Atualizar uso na web e menção de arquivo com @ (2026-10-14, release v0.6.1)
+
+- [x] **Atualizar o uso manualmente na web** (`UsoDasContas.tsx`; rota `POST /contas/{id}/uso` em
+  `mobile.rs`):
+  - Botão por conta.
+  - Claude reaproveita `interaction::account_usage(…, refresh=true)`: digita `/usage` num Claude
+    ocioso da conta ou num oculto, sem mandar mensagem a modelo.
+  - Codex relê o rollout. Erro aparece na própria conta.
+  - Testado de verdade: EmailUber relida em 6,2 s.
+- [x] **@ para mencionar arquivo** (app, web e celular — `Composer.tsx`; rota
+  `GET /conversas/{id}/arquivos?q=`):
+  - O engine varre a pasta do projeto (`varrer_arquivos`, pulando node_modules/.git/target/dist…,
+    teto 20 mil), com cache de 30 s por pasta. Devolve as 40 melhores (`melhores_arquivos`: nome
+    que começa > nome que contém > caminho que contém).
+  - No composer, `@texto` abre a lista. Setas/Enter/Tab/Esc; Enter com a lista aberta não envia.
+  - Insere `@caminho/relativo ` (entre aspas se tiver espaço), o mesmo formato do terminal.
+  - Bug achado no teste: `setEscolhida(0)` dentro do atualizador de estado era reexecutado pelo
+    React e zerava a escolha das setas. Movido para fora, com ref.
+  - Testado de verdade: domus, 2154 arquivos, 1,5 s na primeira busca; `@landing` → Enter inseriu
+    `@packages/validation/src/landing-page.ts`.
+- Testes: engine 84 (`melhores_arquivos_priorizam_o_nome`, `varredura_pula_pastas_pesadas`); front
+  374 (`Mencoes.test.tsx`, atualizar em `UsoDasContas.test.tsx`).
+
+### Release v0.6.1 (2026-10-14)
+
+- [x] Teste `app_busca_arquivos_pelo_protocolo_local` em `mobile.rs`: a busca do `@` pelo caminho do
+  app (`local`, com query string) devolve os arquivos e pula `node_modules`.
+- [x] `VERSION` 0.6.1, changelog, typecheck, 374 testes de front, 85 do engine e `cargo check` verdes.
+- [ ] Testar o `@` dentro do app instalado (visão Conversa). O usuário vai conferir em produção.
