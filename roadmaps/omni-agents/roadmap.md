@@ -2387,3 +2387,426 @@ Suíte: 315 testes de front, 61 do engine, 12 do core, 16 do Tauri.
   `x64-setup.exe` baixa (200, 6,7 MB).
 - [ ] Aviso do Actions: `actions/checkout@v4` e `setup-node@v4` rodam em Node 20, que está
   depreciado (o GitHub força Node 24). Ainda não quebra, mas vale subir as versões das actions.
+
+## Web de PC: conversa completa, terminal ao vivo e otimização (2026-10-12, sem release)
+
+Objetivo: usar o OMNI pela web (`/pc`) como se estivesse no PC. Validado com um engine de teste
+isolado, numa cópia dos dados reais, contra transcripts de até 616 MB.
+
+- [x] **Conversa completa** (`crates/omni-core/src/feed.rs`, novo). A timeline agora traz as ações
+  do agente (`kind: tool`: Bash/Read/Edit… do Claude, `exec`/`apply_patch`/`function_call` do
+  Codex), `/comandos` (`kind: command`) e avisos da CLI (`kind: notice`: interrompido, compactado).
+  Lembretes de sistema, `isMeta` e saídas de comando, que apareciam como mensagens do usuário,
+  ficam de fora. O comando aparece como no terminal (`Rodou npm test`), sem o `cd "<pasta>" &&` inicial.
+- [x] **Leitura incremental** (`FeedCache`): o transcript é lido uma vez e depois só o trecho novo.
+  A última linha sem `\n` vale provisoriamente e não duplica. Na conversa de 616 MB: 5,3 s na
+  primeira leitura (build de debug) e 34 ms nas seguintes; antes, a leitura inteira se repetia a
+  cada 1,5 s.
+- [x] **Uma chamada só para a lista**: `GET /painel` (conversas + catálogo + tema) substitui
+  `/conversas` + `/atencao` + `/projetos`, e o "precisa de você" passou a ser calculado no cliente.
+  `ETag`/`304` no `/painel` e na timeline: sem novidade, a resposta volta sem corpo e a tela não
+  re-renderiza. A timeline traz o estado da própria conversa, então o chat não recarrega mais a lista
+  a cada 1,5 s. A lista é ordenada por última atividade (`updated_at_ms`). A busca de rollouts do
+  Codex roda no máximo a cada 15 s, e o histórico é aquecido na subida do servidor (1ª abertura:
+  6,6 s → 0,26 s).
+- [x] **Terminal ao vivo** na web (`src/web/TerminalEspelho.tsx`, carregado só ao abrir a aba):
+  `GET /conversas/{id}/terminal?desde=` espelha a PTY (primeira leitura limitada a 512 KB) e
+  `POST /conversas/{id}/teclas` digita nela. Respostas automáticas do xterm (DA/DSR/OSC/foco) são
+  filtradas para não vazarem como texto, e a página não marca a sessão como exibida (`headless`).
+  A letra se ajusta à largura; a PTY nunca é redimensionada pela web. O CSP ganhou
+  `style-src 'unsafe-inline'`, que o xterm exige; `script-src` continua só `'self'`.
+- [x] **Chat**: balões memorizados; ações agrupadas em bloco recolhível (o bloco do turno em andamento
+  fica aberto); a tela só acompanha as mensagens novas se você já está no fim (senão aparece
+  "Novas mensagens ↓"); botão **Parar** (Esc) com o agente trabalhando; Enter envia e Shift+Enter
+  quebra linha com teclado físico (no celular, igual a antes).
+- [x] **Layout de PC**: o cabeçalho mostra a conversa aberta (estado · agente · conta · projeto); abas
+  Conversa | Terminal; coluna "Precisa de você" + "Trabalhando agora"; pendências no título da aba
+  do navegador; `/` ou Ctrl+K busca; lista lateral compacta com tempo desde a última atividade.
+- [x] **Bug do engine achado no teste**: engine iniciado de dentro de uma sessão do Claude passava aos
+  terminais `CLAUDE_CODE_CHILD_SESSION` (o Claude não gravava transcript: "Transcript saving is
+  off") e `CLAUDE_CONFIG_DIR` da conta daquela sessão (o perfil Padrão rodava na conta errada).
+  `ambiente_do_terminal` agora remove essas marcas quando o engine as herdou. Teste em `main.rs`.
+- Testes: `feed.rs` (5), rotas `/painel`, timeline e terminal/teclas (3), ambiente (1),
+  `src/test/WebChat.test.tsx` (6). Ajustados `WebApp.test.tsx` (botão "Fechar conversa").
+- Bug pego pelos testes: o ETag fica guardado no módulo; uma tela remontada recebia 304 na primeira
+  leitura e ficava vazia. A primeira leitura de cada montagem agora vem inteira.
+- [ ] Entrar numa release (changelog em linguagem de usuário).
+
+## Avisos de conversa: um por conversa, e abrir limpa (2026-10-12, sem release)
+
+Relato: "mesmo eu abrindo, os avisos voltam do nada" e "várias notificações da mesma conversa".
+
+- [x] **Web/celular — "Precisa de você" com "já vista"**: antes, toda conversa parada esperando
+  mensagem ficava pendente para sempre. Agora abrir a conversa (com a página visível) marca o pedido
+  atual como visto, e ela só volta quando o agente terminar outro turno ou pedir aprovação.
+  - O engine manda `attention` (`sessão:attention_seq`) no resumo da conversa (`resumo()` em
+    `crates/omni-engine/src/mobile.rs`).
+  - `chaveDeAtencao` em `src/mobile/api.ts`; `useDados(aberta)` em `src/mobile/useDados.ts` guarda as
+    vistas em `localStorage` (`omni-vistas`, podado às conversas que existem).
+  - Ligado em `WebApp.tsx` e `MobileApp.tsx`; o título da aba usa a mesma contagem.
+- [x] **Engine — diálogo de aprovação redesenhado não é pedido novo**: um quadro parcial do diálogo
+  passava o estado para "working", e o quadro seguinte contava outro `attention_seq`.
+  `Interaction.aprovacao_contada` trava até o agente voltar a trabalhar ("esc to interrupt" sem
+  diálogo) ou o turno acabar (`interaction.rs`, `append_output`/`settle` em `main.rs`).
+- [x] **App do PC — visto só com quem olha**:
+  - `useAttention` não grava mais "working" como visto. Olhar a aba durante um redesenho fazia o
+    aviso voltar 1,5 s depois.
+  - O "visto" exige a janela em foco (`src/hooks/useJanelaEmFoco.ts`, `App.tsx`). Antes, a aba ativa
+    de um app minimizado contava como vista.
+- [x] **Toast do Windows — um por conversa**: `useAttentionNotifier(items, enabled, naoVistos)` não
+  manda outro toast da mesma sessão até ela ser vista. Três turnos com você fora geram um aviso, não
+  três.
+- Testes: `aprovacao_redesenhada_conta_um_aviso_so` (engine); `useAttention.test.tsx` (redesenho);
+  `useAttentionNotifier.test.tsx` (um toast por conversa); `WebApp.test.tsx` (abrir tira de
+  "Precisa de você", turno novo traz de volta uma vez).
+- [ ] Entrar numa release, junto com a web de PC acima.
+
+### Segunda rodada (mesmo dia): ATENÇÃO com a mesma conversa dez vezes, status na lateral, Docker
+
+Print do relato: "opa" repetido em ATENÇÃO. Causa nos dados do dev: a conversa `conv-268f…` tinha
+~10 sessões. O failover abre uma sessão nova a cada troca de conta, e cada tentativa antiga ficava
+`stopped` + `usage_limit`. Cada uma virava um item e entrava na lista TERMINALS do projeto.
+
+- [x] **Aviso por conversa** (`src/features/terminal/useAttention.ts`):
+  - `conversationKey` (`conversation_id`, ou o id da sessão) e `latestPerConversation`: a sessão viva
+    representa a conversa; entre várias, a mais nova (`created_at_ms`, com o id `terminal-<ms>` como
+    reserva).
+  - "Visto" passa a ser por conversa: abrir qualquer sessão dela limpa o aviso.
+  - Limite de uso, erro e travamento valem para a conversa: a próxima tentativa do failover batendo
+    no mesmo limite não reacende o aviso.
+- [x] **Toast**: `useAttentionNotifier` reserva por `conversationKey` e deduplica dentro do mesmo
+  lote.
+- [x] **Lista TERMINALS** (`App.tsx`): uma linha por conversa.
+- [x] **Status claros na lateral** (`src/components/ConversaStatus.tsx`): trabalhando (verde,
+  pulsando), aprovar, interrompido (limite/erro/travou), finalizado (terminou e você não viu) e
+  neutro (sem etiqueta, apagado). Usados na lista de agentes (`Sidebar.tsx`, ações da linha só no
+  hover/foco para caber a etiqueta) e em ATENÇÃO (`AttentionPanel.tsx`, com o detalhe do motivo na
+  segunda linha).
+- [x] **Docker fechado** (`dockerIndisponivel` em `src/features/docker/dockerService.ts`,
+  `DockerPanel.tsx`):
+  - Docker Desktop fechado ou docker ausente vira uma linha neutra ("Docker fechado" + Verificar),
+    não alerta; o stderr fica no tooltip.
+  - Poll de 30 s nesse estado.
+  - Erro de verdade quebra a linha (`[overflow-wrap:anywhere]`) e o `<nav>` da lateral tem
+    `overflow-x-hidden`: sem rolagem horizontal.
+- Testes: `useAttention.test.tsx` (várias sessões → um aviso), `useAttentionNotifier.test.tsx`
+  (failover não solta outro toast), `ConversaStatus.test.tsx` (novo), `DockerPanel.test.tsx` (fechado,
+  ausente, erro real), `Sidebar.test.tsx` ajustado. Front: 352 testes.
+- [x] **"Acabou e está como interrompido"**: o `notice` vinha da tela inteira, e a mensagem de limite
+  do turno anterior continua visível depois que o agente volta e termina normalmente.
+  - Agora só conta o aviso que apareceu depois que o turno atual começou:
+    `Interaction.avisos_antes_do_turno` é gravado quando "esc to interrupt" aparece com
+    `turn_active` falso, e cai junto quando o aviso rola para fora da tela.
+  - Funções `notice_counts`/`notice_since` em `main.rs`.
+  - Teste: `aviso_de_limite_de_um_turno_anterior_nao_vale_para_o_novo`.
+- [x] **"Terminou mas aparece interrompido"**: o `notice` vinha da tela inteira, e a mensagem de limite
+  do turno anterior continua visível depois que o agente volta e termina normalmente.
+  - `Interaction.avisos_antes_do_turno` guarda quantos avisos já estavam na tela quando o turno
+    começou ("esc to interrupt" aparecendo).
+  - `notice_since` só considera os que surgirem depois disso (`main.rs`). A base diminui junto quando
+    o aviso rola para fora da tela.
+  - Teste: `aviso_de_limite_de_um_turno_anterior_nao_vale_para_o_novo`.
+  - Ceiling: sessão retomada pelo failover sem prompt continua "interrompido" até o próximo turno
+    (o replay do `--resume` reexibe o limite).
+
+### Terceira rodada: "interrompido" num turno que terminou bem, e a "sessão que cai"
+
+- [x] **Causa da sessão caindo**: a detecção de aviso do engine procurava as frases de limite em
+  **qualquer ponto da tela**. Um agente mostrando o código do próprio engine (grep, testes) com essas
+  frases fazia o engine reportar `usage_limit`. O failover do app então trocava de conta e reabria a
+  sessão com `--resume` no meio do trabalho. Confirmado nesta sessão: ela roda no OMNI instalado
+  (engine sem reiniciar), e as quedas vieram logo depois de imprimir essas frases, com a conta
+  alternando entre Padrão e EmailUber.
+- [x] **Detecção ancorada na linha** (`notice_counts` em `crates/omni-engine/src/main.rs`): só conta a
+  linha que **começa** com a mensagem da CLI, depois dos marcadores da TUI (`⎿`, `●`, `■`…). Com o
+  agente no meio do turno ("esc to interrupt" na tela), nada conta como aviso.
+- [x] **Aviso só do turno atual**: `Interaction.avisos_antes_do_turno` guarda quantos avisos já
+  estavam na tela quando o turno começou; o aviso do turno anterior não marca "interrompido" a
+  conversa que acabou de terminar bem.
+- Testes: `frase_de_limite_no_meio_de_codigo_nao_e_aviso`,
+  `aviso_de_limite_de_um_turno_anterior_nao_vale_para_o_novo`, e o teste antigo com as mensagens
+  reais. Engine: 69 testes; front: 352.
+- `TerminalPane.test.tsx › ritmo da leitura` falhou uma vez na suíte cheia e passou isolado duas
+  vezes: depende de tempo sob carga, não foi mexido.
+- [ ] **Só vale no app instalado depois da release.** Até lá, o OMNI instalado continua com a
+  detecção antiga.
+
+### Terceira rodada: "acabou e aparece interrompido" e a sessão que caía sozinha
+
+- [x] **Sessão caindo no meio do trabalho (grave).** O engine procurava as frases de limite de uso
+  em qualquer ponto da tela. Quando o agente mostrava texto com essas frases (código do próprio
+  engine, saída de `grep`/`cargo`, uma resposta falando de limite), a sessão era marcada como
+  limitada. O failover então trocava de conta e reabria a conversa com `--resume`. Confirmado em
+  `sessions.json` do app instalado: várias sessões desta conversa paradas como limitadas, alternando
+  `claude-padrao`/`emailuber`.
+  - `notice_counts` (`crates/omni-engine/src/main.rs`) agora só conta **linhas que começam** com a
+    mensagem da CLI, depois dos marcadores da TUI (`⎿ ● ■ ⏺ …`): `USAGE_LIMIT_LINES` e
+    `API_ERROR_LINES`.
+  - Com o agente no meio do turno ("esc to interrupt" na tela), nada vira aviso.
+- [x] **Turno que terminou aparecendo "interrompido".** A mensagem de limite de um turno anterior
+  continuava na tela. `Interaction.avisos_antes_do_turno` guarda quantos avisos já havia quando o
+  turno começou; só os novos contam (`notice_since`).
+- Testes: `frase_de_limite_no_meio_de_codigo_nao_e_aviso`,
+  `aviso_de_limite_de_um_turno_anterior_nao_vale_para_o_novo`, `notice_distinguishes…` ampliado com as
+  mensagens reais. Engine: 69.
+- ⚠️ O app **instalado** (0.5.4) continua com a detecção antiga até a próxima release: uma sessão
+  dele que exibir essas frases ainda é derrubada pelo failover.
+- [x] **Aviso reexibido pelo `--resume`**: logo depois do failover a conversa aparecia
+  "interrompido" até a próxima mensagem, porque o histórico reexibido trazia o aviso antigo.
+  `Interaction.turnos_iniciados`: antes do primeiro turno da sessão, tudo o que está na tela é base.
+  Teste `aviso_reexibido_pelo_resume_nao_conta_antes_do_primeiro_turno` (`mobile.rs`). Engine: 70.
+
+## Agentes como conversa no app do PC, CHATS × TERMINALS e "Acesso remoto" (2026-10-13, sem release)
+
+Pedido: escolher se as abas de agente aparecem como terminal (como sempre) ou como o chat da web,
+sem perder o terminal para rodar `npm run dev`. Separar conversas com IA dos terminais na lateral.
+Deixar claro nas Configurações que o acesso remoto serve para celular **e** outro computador.
+
+- [x] **Visão Conversa nas abas de agente** (Configurações → Aparência → Agentes; `agentView` em
+  `src/types/settings.ts`, padrão `terminal`):
+  - `src/features/conversa/AbaDeAgente.tsx`: o chat da web (`ConversationDetail`) por cima do
+    `TerminalPane`, com "Ver terminal" / "Ver conversa".
+  - O terminal **fica montado** por baixo: failover, respostas ao ConPTY e tamanho da PTY dependem
+    dele.
+  - Terminais sem IA continuam sempre terminal.
+- [x] **Mesmas rotas, sem HTTP:**
+  - `EngineRequest::Api { method, path, body }` → `mobile::local` despacha no roteador da API
+    (`rotas()`, extraído de `router()`) sem a camada de origem/token de celular; quem chega já tem o
+    token do engine.
+  - Comando Tauri `engine_api`; `engineApi` em `terminalService.ts`.
+  - `api.ts` ganhou `usarTransporte`: o app do PC liga `transporteDoEngine` em `src/main.tsx`.
+  - Funciona com o acesso remoto desligado.
+  - `tower` passou de dev-dependency para dependency (já vinha com o axum).
+  - Anexo (imagem colada no chat do PC): `Api` ganhou `body_base64` e `headers`; `base64_decode`
+    (biblioteca padrão, sem crate) em `mobile.rs`; `transporteDoEngine` lê o arquivo com
+    `FileReader` e repassa `X-Omni-Nome`.
+  - Timeout das chamadas `Api` no cliente: 30 s (as outras seguem 2 s). Abrir uma conversa enorme
+    pela primeira vez leva ~5 s e estourava.
+  - Testes: `anexo_colado_no_pc_chega_pelo_protocolo_local`, `base64_decode_confere_com_os_casos_do_rfc`
+    (engine, 73) e o de imagem colada em `AbaDeAgente.test.tsx`.
+- [x] **CSS**: as regras de página (`html`/`body`) saíram de `mobile.css` para `src/mobile/pagina.css`
+  (importado só pelo celular e pela web). `mobile.css`/`web.css` entram no app do PC; conferido que
+  nenhuma classe colide e não há seletor global.
+- [x] **Lateral: CHATS × TERMINALS** (`Sidebar.tsx`): a seção AGENTS (vazia) virou CHATS, com as
+  sessões que têm agente de IA; TERMINALS só os shells.
+- [x] **"Celular" → "Acesso remoto"** (`SettingsView.tsx`, `MobileSettings.tsx`): título, passos e
+  bloco do QR falam em celular ou outro computador.
+- Testes: `desktop_chama_a_api_pelo_protocolo_local` (engine, 71); `AbaDeAgente.test.tsx` (3, novo);
+  `Sidebar.test.tsx` (CHATS × TERMINALS).
+  - O teste de ritmo do `TerminalPane` falhava às vezes com a suíte em paralelo (relógio real, 250
+    ms); a janela foi para 600 ms com o limite proporcional.
+  - Front: 356.
+- [ ] Ver no app rodando: precisa reiniciar o `npm run dev` (engine e Tauri mudaram).
+- [ ] Release + changelog.
+
+### Ajustes depois do primeiro uso (2026-10-13)
+
+- [x] **Terminal aparecendo por trás da conversa** (`AbaDeAgente.tsx`):
+  - Com a conversa na tela, o terminal fica `invisible`. Continua montado e com tamanho (failover,
+    PTY), mas não aparece e não recebe foco.
+  - O botão "Ver conversa" saiu de cima da barra de status do terminal (mesmo canto, mesma camada).
+- [x] **"Começa a pensar" ao abrir a conversa** (`append_output` em `main.rs`): reabrir a aba
+  redesenha a TUI, e qualquer saída virava `working` por 1,5 s. Para Claude/Codex parados, saída
+  sem "esc to interrupt" mantém `answered`. Teste `redesenho_com_o_agente_parado_nao_vira_trabalhando`.
+- [x] **Plano: "Idempotency-Key obrigatório"**: a primeira versão do `engine_api` não levava
+  cabeçalhos; já corrigido junto com o anexo. Teste `modo_pelo_pc_leva_o_idempotency_key`.
+- [x] **Terminais sem agente na web** (`/terminais` em `mobile.rs`):
+  - Listar (só shells), `saida`, `teclas`, `fechar` e `POST /terminais {project_id}`. A pasta sai da
+    lista de projetos, nunca do navegador; limite de sessões compartilhado; WSL resolvido pelo engine.
+  - Web: seção "Terminais" na lateral do projeto, "+ Novo terminal", terminal no centro (`#/t/<id>`)
+    com "Fechar terminal".
+  - `TerminalEspelho` recebe as rotas (`saida`/`teclas`) e trata 404 como "fechado".
+  - Testes: `terminais_sem_agente_listam_e_recusam_sessao_de_agente`,
+    `web_abre_shell_no_projeto_roda_e_fecha` (shell real, ponta a ponta) e o fluxo em
+    `WebApp.test.tsx`. Engine: 77; front: 358.
+
+## Conversas mais legíveis, uso na web, e conta/modelo/esforço na conversa (2026-10-13, sem release)
+
+- [x] **Visual da conversa** (`mobile.css`, bloco "Leitura da conversa"; vale para celular, web e a
+  visão Conversa do app):
+  - Texto com a fonte do sistema (código continua mono).
+  - Agente sem cartão: texto corrido com filete na cor de destaque marcando o turno.
+  - Cabeçalho "Claude · hora" só na primeira fala do turno (`continuacoes` em `MobileApp.tsx`,
+    prop `continua` no `MessageBubble`).
+  - Você em cartão destacado à direita; ações presas ao filete, mais apagadas.
+  - Conferido com screenshot.
+- [x] **Uso das contas na web** (`src/web/UsoDasContas.tsx`, rota `GET /contas`):
+  - 5H e semana por conta, mesmas faixas de cor do rodapé, com a conta da conversa aberta
+    destacada.
+  - Só o que já foi lido (consultar de novo digitaria `/usage` num agente).
+  - Auxiliares de uso saíram para `src/lib/uso.ts` (sem Tauri), reexportados por
+    `AgentUsageStatus`.
+- [x] **Conta, modelo e esforço na conversa** (`src/mobile/AjustesDaConversa.tsx`, acima do campo de
+  texto; web, celular e app):
+  - `GET /conversas/{id}/opcoes`: contas do mesmo agente, modelos (Claude: fable/opus/sonnet/haiku;
+    Codex: `models_cache.json` da conta, com os esforços de cada um) e o que está valendo (lido do
+    transcript).
+  - `POST /conversas/{id}/ajustes` → `reabrir_com`: reinicia a **mesma** sessão (a aba do app fica
+    ligada) com `claude --resume <id> --model --effort` / `codex resume <id> -m -c
+    model_reasoning_effort=`.
+  - Troca de conta copia o transcript para o config dir da conta nova e abre um trecho novo na
+    conversa.
+  - Só com o agente parado; valores validados (`valor_seguro`) porque viram argumento de shell.
+  - **Testado de verdade** num engine isolado:
+    - "Haiku 5.5 with low effort" apareceu na sessão retomada.
+    - A troca EmailUber → Padrão retomou o mesmo id em `~/.claude` e criou o segmento novo.
+- [x] **Bug achado no teste**: sessão aberta pelo celular/web numa pasta que a conta nunca abriu
+  travava no "trust this folder?" (o chat dizia só "entrada não reconhecida").
+  `passar_pela_confianca` (thread à parte, `wait_claude_ready`) depois do spawn e da reabertura.
+- Testes:
+  - Engine (80): `comando_de_retomada_por_cli`, `ajustes_recusam_valor_que_vira_comando`,
+    `opcoes_listam_modelos_e_contas_do_mesmo_agente`.
+  - Front (361): `AjustesDaConversa.test.tsx` e `UsoDasContas.test.tsx`.
+  - A faixa valida o formato da resposta (um `{}` derrubava a conversa — pego pelo teste).
+- Artefato do teste real: conversa "Teste visual 2" (transcript `a6206027-…`, projeto domus) gravada
+  em EmailUber e em `~/.claude`.
+- [x] **Ajuste pedido depois do print**: a fonte da conversa voltou a ser a do app (só altura de
+  linha 1,7). Texto do agente apagado no app do PC: `mobile.css` carrega antes do Tailwind ali, e o
+  `.prose` padrão (cinza de fundo claro) vencia. As variáveis agora valem em
+  `.bubble-markdown.prose`, e o texto usa `--c-text-primary`.
+- [x] **"Cadê o trocar modelo/esforço no app?"**: o engine de dev em execução era de antes da rota
+  (binário 09:23; `/opcoes` respondia 404). O front atualiza por HMR, o engine só no `npm run dev`.
+  - A faixa agora avisa "reinicie o OMNI" num 404 em vez de sumir calada.
+  - `request()` em `api.ts` lia JSON antes do status; um 404 sem corpo virava erro de parse, não
+    `ApiError(404)`. Corrigido.
+  - Teste em `AjustesDaConversa.test.tsx`. Front: 362.
+- [x] **Composer redesenhado** (pedido: "ficou feio, o enviar tá cagado"; `Composer.tsx`,
+  `AjustesDaConversa.tsx`, `ModoDoAgente` em `MobileApp.tsx`, bloco do composer em `mobile.css`):
+  - Um cartão só: texto em cima; embaixo, anexo · chips Conta/Modelo/Esforço com ícone (menu abre
+    para cima) · lápis de renomear · Plano/Auto segmentado com ícone · Enviar.
+  - Borda acende no foco.
+  - Enviar em destaque (sombra dura, afunda no clique) que vira **Parar** com o agente
+    trabalhando e campo vazio.
+  - Saiu a faixa solta com o título e os seletores com rótulo em cima. `BarraDaConversa` deu lugar
+    a `RenomearConversa` (abre pelo lápis).
+  - Modo e ajustes aparecem com sessão ligada (`capabilities`; engine antigo não manda `live`).
+  - Conferido com screenshot em 2x (foco, texto digitado, menu aberto). Front: 362.
+- [x] **Web impecável** ("faça o mesmo que no app no web"):
+  - O composer novo e a troca de conta, modelo e esforço já eram os mesmos componentes da web. O
+    usuário via a versão antiga porque os dois engines que servem a web estavam desatualizados:
+    instalado 0.5.4 e dev iniciado antes das mudanças. Conferido baixando o bundle de cada um.
+  - Polimento da web (`WebApp.tsx`, `web.css`, `UsoDasContas.tsx`, `NovaSessao` com `classeBotao`):
+    - Rodapé da lateral com "Nova sessão" e "Novo terminal" lado a lado, com ícones (antes: botão
+      azul gigante e "Terminais" espremido e cortado).
+    - Terminais listados só quando existem.
+    - Projetos com ícone de pasta e contagem em caixinha; abas Conversa/Terminal com ícone.
+    - Uso das contas diz o agente de cada conta (eram três "Padrão" iguais).
+    - Botão secundário com contorno.
+  - Conferido com screenshots. Front: 362.
+- [x] **"Não consigo trocar o modelo"** (print: conversa "Histórico"): conversa sem sessão aberta não
+  tinha o que reabrir — os chips nem apareciam. Agora dá para **retomar** com conta/modelo/esforço:
+  - Engine: `POST /conversas/{id}/retomar` (`plano_de_retomada` + `retomar` em `mobile.rs`).
+    - Vale para conversa do OMNI com a sessão fechada e para conversa só do histórico da CLI.
+    - Esta última vira conversa do OMNI com id estável (`stable_id("conv", [id])`), para um segundo
+      toque não duplicar.
+    - Abre sessão headless com `--resume` + ajustes na pasta do projeto, leva o transcript se a
+      conta mudar (`levar_transcript`, agora comum com `reabrir_com`) e passa pelo diálogo de
+      confiança.
+    - `/opcoes` também responde para conversa do histórico (`ultima_sessao`).
+  - Front: sem sessão, os chips ficam ativos com **Retomar conversa** (`onRetomar` em
+    `AjustesDaConversa`). `ConversationDetail` espera a sessão subir e navega (`abrirConversa`). O
+    placeholder explica.
+  - Testado de ponta a ponta:
+    - Pela interface (Playwright): conversa fechada → Haiku → Retomar → campo "Mensagem para o
+      agente…".
+    - Pela API: conversa só do histórico → `conv-4783…` viva em 3 s com as 4 mensagens, sem
+      duplicar na lista.
+    - Engine: `retomar_conversa_sem_sessao_e_recusar_a_aberta` (81).
+
+### "Às vezes a conversa nova dá timeout e tenho que clicar de novo" (2026-10-13)
+
+- [x] Causa medida no engine isolado: **abrir a primeira sessão num projeto do WSL levou 2,76 s**
+  (`wsl.exe` frio; depois cai para ~40 ms). O cliente do engine dava 2 s a toda requisição.
+  `SpawnTerminal` estourava: o app mostrava o erro com "Tentar reconectar", e o engine terminava de
+  abrir a sessão do lado dele — o clique abria **outra** (de onde vinham as sessões repetidas).
+- [x] `send_request` (`src-tauri/src/engine_client.rs`):
+  - `SpawnTerminal`, `RestartSession`, `DuplicateSession` e `Api` vão em conexão própria com 30 s.
+  - Não esperam pouco demais nem seguram a conexão compartilhada (terminal das outras abas).
+- [x] `restart_session` (`main.rs`) soltava a trava da tela só depois de subir o processo;
+  `list_sessions` passa por ela em toda sessão, então a lista inteira parava junto. Agora solta antes
+  do spawn.
+- [x] Visão Conversa (`AbaDeAgente.tsx`) tenta de novo sozinha (5×, com espera crescente) antes de
+  mostrar erro. Engine desatualizado explica na hora.
+- [x] **Trocar conta/modelo/esforço também no modo Terminal** (`FaixaDoTerminal` em `AbaDeAgente.tsx`):
+  - Faixa fina acima do terminal (não flutuando sobre o texto da CLI) com os mesmos chips da
+    conversa; `POST /ajustes` com `If-Match`, reabrindo a mesma sessão.
+  - Erro de recusa aparece na faixa.
+  - No modo Conversa, o "Ver conversa" mudou para essa faixa.
+  - Teste novo em `AbaDeAgente.test.tsx`. Front: 363.
+- [x] **Conversa "mais premium, menos colorida"** (`mobile.css`, blocos "Acabamento premium" e
+  "Meio-termo"):
+  - Bordas de 1 px; sem sombras duras (o composer ganhou sombra suave e enviar plano).
+  - A cor de destaque em doses baixas: tom leve e borda fina na mensagem do usuário, filete suave do
+    turno, verbos das ações, ícones dos chips e modo ativo.
+  - Ícone do agente colorido só no cabeçalho, apagado nas linhas de ação.
+  - Código inline e marcadores discretos. Primeira tentativa tirou cor demais — usuário pediu "uma
+    corzinha" e ficou no meio-termo.
+  - Conferido com screenshots.
+- [x] **"Infinitamente mais bonito"** (`Chat.tsx`, `MobileApp.tsx`, bloco "Desenho da conversa" em
+  `mobile.css`):
+  - Avatar do agente numa coluna à esquerda (só na primeira fala do turno; o resto alinha com ele, o
+    filete saiu).
+  - Separador de dia ("Hoje", "Ontem", "12 de outubro") com linhas.
+  - Bloco de código com a linguagem no topo e "Copiar" (`BlocoDeCodigo`).
+  - "Copiar resposta" no hover (some onde não há área de transferência: HTTP fora de localhost).
+  - Ícone por tipo de ação (`ICONE_DA_ACAO`; comando vira `$` — o ícone de terminal pequeno parecia
+    uma caixa de seleção).
+  - Sua mensagem com degradê leve.
+  - Conferido com screenshots em 2x. Testes `ChatDesenho.test.tsx` (3). Front: 366.
+
+## Bifurcar conversa (2026-10-14, sem release)
+
+- [x] "Duplicar" numa sessão de agente agora **bifurca** a conversa (`bifurcar` em `main.rs`). Antes
+  abria um shell sem agente, que caía em TERMINALS.
+  - Claude: `--resume <id> --fork-session --session-id <novo>`. Conferido na CLI 2.1.296 que o fork
+    nasce com o id escolhido e traz o histórico (teste real com `-p`). Assim a timeline sabe onde ler
+    desde o começo.
+  - Codex: `codex fork <id>` (id escolhido pela CLI; a descoberta de rollouts acha o arquivo).
+  - Sem mensagem ainda: abre conversa nova do mesmo agente e conta.
+  - Conversa nova "<nome> (fork)" com título manual, mesma conta; a original não muda.
+  - `comando_ao_reiniciar`: reiniciar a aba do fork retoma a cópia (`--resume <novo>`) em vez de
+    bifurcar de novo. Teste `reiniciar_um_fork_retoma_a_copia`.
+  - Shell continua sendo duplicado como shell.
+- [x] Lateral: em CHATS o botão é "Bifurcar conversa" (ícone de ramo, tooltip explicando); em
+  TERMINALS, "Duplicar terminal".
+- [x] `src/test/setup.ts` ganhou `ResizeObserver` falso: o terminal da web, carregado sob demanda,
+  fazia um teste falhar ou passar conforme o carregamento.
+- Engine: 82. Front: 366.
+- Artefato do teste da CLI: fork `95b3b3c0-…` da "Teste visual 2" em `~/.claude`, projeto domus.
+
+## Anexar arrastando e colando, qualquer tipo (2026-10-14, sem release)
+
+- [x] Qualquer tipo de arquivo sempre foi aceito (sem `accept`); o que faltava era o caminho de
+  entrada:
+  - **Web/celular** (`ConversationDetail`): arrastar para qualquer ponto da conversa anexa (camada
+    "Solte para anexar"). Colar arquivo com o foco fora do campo também anexa (`paste` no
+    documento, ignorando o que já foi tratado — não duplica).
+  - **App do PC** (`useSoltarArquivos` em `AbaDeAgente.tsx`): o arrastar do Windows chega pelo
+    `onDragDropEvent` do Tauri (caminhos). Lê com `readFile` (permissão nova `fs:allow-read-file`)
+    e entrega à conversa pelo `EVENTO_ANEXAR` — dali é o mesmo anexo do celular.
+  - `tipoPelaExtensao` para PDF, planilhas, documentos, CSV, MD etc.
+- [x] Marcador do prompt passou a "[Anexos enviados pelo OMNI]" (dizia "pelo celular" até vindo do
+  PC); o antigo continua sendo lido.
+- Testes: `AnexarArquivos.test.tsx` (4). Conferido no navegador real (Playwright): PDF + CSV + PNG
+  soltos viraram três anexos. Front: 370.
+
+## Release v0.6.0 (2026-10-14)
+
+- [x] `VERSION` 0.6.0 + `version:sync`; entrada no `src/lib/changelog.ts` em linguagem de usuário
+  cobrindo tudo desde a 0.5.4:
+  - web de PC;
+  - visão Conversa no app;
+  - visual novo;
+  - conta/modelo/esforço;
+  - retomar;
+  - bifurcar;
+  - anexos;
+  - terminais na web;
+  - CHATS × TERMINALS e status;
+  - avisos;
+  - correções de falso limite, timeout no WSL, confiança de pasta e Docker;
+  - "Acesso remoto".
+- [x] Verificado antes do commit: typecheck, front 370, workspace Rust (22/41/82/3), `cargo check` do
+  Tauri.
+- [ ] Publicar o rascunho do CI como release normal e conferir `releases/latest/download/latest.json`.
+- Pendente antigo: actions do GitHub em Node 20 (depreciado).
