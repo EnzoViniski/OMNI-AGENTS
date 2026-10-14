@@ -2848,4 +2848,5 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] Teste `app_busca_arquivos_pelo_protocolo_local` em `mobile.rs`: a busca do `@` pelo caminho do
   app (`local`, com query string) devolve os arquivos e pula `node_modules`.
 - [x] `VERSION` 0.6.1, changelog, typecheck, 374 testes de front, 85 do engine e `cargo check` verdes.
+- [x] Publicada como release normal/latest (commit `4281d9f`, tag `v0.6.1`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.1, assinado; instalador Windows HTTP 200.
 - [ ] Testar o `@` dentro do app instalado (visão Conversa). O usuário vai conferir em produção.
