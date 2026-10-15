@@ -3019,3 +3019,34 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
   - Fila, Parar, tokens e status valem nos dois, porque o componente é o mesmo.
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
+
+### Pós-0.6.2 (não publicado)
+
+- [x] **Mensagem colada sumia da conversa** ("Não consegui confirmar o envio"): a CLI grava texto
+  colado como `<pasted_content id="…">…</pasted_content id="…">` e o filtro de texto injetado
+  descartava tudo que começa com `<`. `omni_core::feed::sem_colado` desembrulha (feed, título e
+  histórico via `text_message`). Teste no `feed.rs`; conferido na conversa real pela web.
+- [x] **Mensagens anteriores sem trocar de página** (`ConversationDetail` em `MobileApp.tsx`):
+  as páginas antigas entram acima das recentes (`juntarPaginas`, pela numeração do servidor), a
+  rolagem é compensada (`useLayoutEffect` com âncora de altura) e chegar ao topo busca sozinho.
+  Saiu o modo "página antiga" com "Próximas mensagens"/"Ir para as mais recentes". Conferido no
+  navegador: o item visível fica no mesmo pixel após cada carga.
+- [x] **Dropdown de uso das contas** (`UsoDeTodasAsContas.tsx`, CSS `.uso-*`): agrupado por IA,
+  selo "em uso", e-mail, horário de reset por janela, "consultado há…" e "Atualizar todas".
+- [x] **Estrela da conta principal** (`omni_core::compartilhar::{principal, principais,
+  definir_principal}`, preferência `principal` no `extensoes.json`): a conta com estrela é a fonte
+  das extensões; sem estrela vale a nativa. Comando Tauri `definir_conta_principal`, rota
+  `POST /extensoes/principal`, botão ★ em cada conta na aba Extensões (`.ext-estrela`,
+  `StarFilledIcon`). Teste `estrela_troca_a_conta_de_onde_as_outras_recebem`; conferido no mock.
+- [x] **Compartilhamento mais seguro** (`omni_core::compartilhar`): troca de estrela/liga-desliga
+  pula contas com sessão aberta (`com_sessao_aberta`, lê o `sessions.json`) — recebem antes da
+  próxima sessão; `config.toml` do Codex mesclado com `toml_edit` (comentários ficam, arquivo
+  inválido não é tocado); plugin cujo `installPath` sumiu sai do registro e do `enabledPlugins`;
+  skills copiadas e não editadas acompanham a principal (`omni-copiadas.json` guarda a data de
+  cada cópia). Testes `skill_copiada_…`, `plugin_desinstalado_…`, `conta_com_sessao_aberta_…`.
+- [-] **Conectores do claude.ai nas contas extras — descartado** (decisão do usuário, 2026-10-15).
+  Só seria possível repassando o token OAuth da conta principal ao `mcp-proxy.anthropic.com`,
+  endpoint não público e restrito a clientes oficiais. Riscos: termos de uso (suspensão da conta
+  principal), quebra silenciosa a cada versão do Claude Code e conflito na renovação do login.
+  Fica como está: cada conta conecta os seus em claude.ai → Configurações → Conectores (a aba
+  Extensões já explica). Não retomar sem nova decisão do usuário.
