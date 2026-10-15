@@ -3020,7 +3020,7 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
 
-### Pós-0.6.2 (não publicado)
+### v0.6.3 (publicada 2026-10-15, commit `40e61a7`)
 
 - [x] **Mensagem colada sumia da conversa** ("Não consegui confirmar o envio"): a CLI grava texto
   colado como `<pasted_content id="…">…</pasted_content id="…">` e o filtro de texto injetado
