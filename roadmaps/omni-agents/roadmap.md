@@ -2850,3 +2850,171 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] `VERSION` 0.6.1, changelog, typecheck, 374 testes de front, 85 do engine e `cargo check` verdes.
 - [x] Publicada como release normal/latest (commit `4281d9f`, tag `v0.6.1`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.1, assinado; instalador Windows HTTP 200.
 - [ ] Testar o `@` dentro do app instalado (visão Conversa). O usuário vai conferir em produção.
+
+## Uso de todas as contas no rodapé do app e botão visível na web (2026-10-14, sem release)
+
+- [x] **Dropdown no rodapé do app** (`src/features/terminal/UsoDeTodasAsContas.tsx`, ligado em
+  `AgentUsageStatus.tsx`): botão de gráfico à esquerda do agente em foco. Abre para cima, num portal,
+  porque o rodapé tem `overflow-hidden`. Mostra as contas de Claude e Codex com 5H e Semana,
+  destaca a conta da aba e tem um botão por conta que consulta o `/usage` (`account_usage`,
+  `refresh: true`). Abrir só lê o cache. Fecha com Esc ou clique fora. Teste em
+  `src/test/UsoDeTodasAsContas.test.tsx`.
+- [x] **Web:** o botão de atualizar existia na 0.6.1, mas era só um ícone apagado ao lado de
+  "CLAUDE". Virou um botão com o texto "Atualizar" (ou "Lendo…"), com borda (`web.css`).
+- [ ] Conferir o dropdown no app instalado depois da próxima release.
+- [x] **Status dos chats mais destacado na lateral** (`ConversaStatus.tsx`, `Sidebar.tsx`): a
+  etiqueta (trabalhando/aprovar/interrompido/finalizado) virou um selo com fundo e borda na cor do
+  status. A linha ganhou uma barra de 2 px à esquerda e um fundo leve na mesma cor, e o nome fica em
+  negrito. O ícone passou de 12 para 14 px. Linha neutra não muda. O painel "Precisa de você" usa o
+  mesmo selo.
+- [x] **Mesmo destaque de status na web e no celular** (`ConversationList` em `MobileApp.tsx`,
+  `mobile.css`): cada conversa usa o `statusDaConversa` do PC e mostra o selo `EtiquetaDoStatus`
+  (substitui o antigo "Aprovar"). O card ganha uma barra de 3 px e um degradê na cor do status
+  (`.m-card[data-status]`). O "finalizado" vem de `naoVistas` (ids do `attention` do `useDados`).
+  O engine passou a mandar `notice` no resumo da conversa, para o "interrompido" por limite ou erro
+  de API aparecer. Conferido com print na web de PC e no celular (estados simulados por
+  interceptação do `/painel`). Teste em `src/test/ListaStatus.test.tsx`.
+
+## Capricho visual: barra superior própria e controles em pixel (2026-10-15, sem release)
+
+- [x] **Barra superior customizada** (`src/components/TitleBar.tsx`, CSS `.titlebar*` em
+  `index.css`): janela sem moldura (`decorations: false`, `shadow: true` em `tauri.conf.json`).
+  - Conteúdo: logo e "OMNI AGENTS" (volta ao início), trilha workspace › projeto (caminho na
+    dica), Layouts, sino e os botões minimizar, maximizar/restaurar e fechar, com o fechar
+    vermelho no hover.
+  - Glifos em pixel (`src/components/ui/PixelGlyph.tsx`). Arrasta e maximiza no duplo clique por
+    `data-tauri-drag-region`. Um filete do acento no topo apaga com a janela fora de foco.
+  - Permissões novas em `capabilities/default.json`: minimize, toggle-maximize,
+    internal-toggle-maximize, is-maximized, start-dragging e close.
+- [x] **Logo e sino saíram da lateral** (`Sidebar.tsx`). O popover do sino fica dentro da janela
+  (`NotificationBell.tsx`).
+- [x] **Sem o cabeçalho repetido do projeto** (`WorkspaceView.tsx`): nome e caminho foram para a
+  trilha, e Layouts para a barra (`LayoutPresetPicker` com glifos de pixel no lugar de ▥▤▦▣).
+- [x] **Painéis** (`PaneView.tsx`, `WorkspaceTabBar.tsx`):
+  - Ações planas com glifo de pixel (`.pane-acao`) no lugar dos botões com sombra que vazava.
+  - Maximizar e fechar só aparecem com mais de um painel.
+  - A moldura laranja aparece só no painel ativo quando há vários.
+  - Aba ativa com filete do acento; o × das abas inativas aparece no hover; "+" em pixel.
+- [x] Testes: `TitleBar.test.tsx` (novo); `App.test.tsx` e `PaneView.test.tsx` ajustados.
+  377 verdes; `cargo check` valida a config e as permissões.
+- [x] Conferido com prints (Vite + Tauri simulado no Playwright): um painel, dois painéis,
+  Configurações e tema claro.
+- [ ] Conferir no app de verdade: arrastar, redimensionar pelas bordas, duplo clique, Snap do
+  Windows e sombra da janela.
+
+## Capricho visual 2: Configurações, novo agente, histórico, animações e bug do Auto/Plano (2026-10-15, sem release)
+
+- [x] **Bug do Auto/Plano** (`post` em `MobileApp.tsx`): cada troca redesenha o rodapé do
+  terminal, e a versão da tela que a conversa tinha ficava velha. O PC recusava com 412, aparecia
+  um erro e era preciso clicar de novo. Agora modo e ajustes releem a versão (timeline) e repetem
+  uma vez. Prompt e aprovação continuam recusando, porque ali o If-Match protege.
+  - `ModoDoAgente` acende o modo pedido na hora (`is-pedido` pulsa até confirmar).
+  - Teste em `WebApp.test.tsx` ("troca de modo com a tela redesenhada…").
+- [x] **Configurações** (`SettingsView.tsx`, `.settings*` em `index.css`):
+  - Largura máxima de 1180 px (era `max-w-3xl`).
+  - Topo e menu em cartão, cada item com ícone, nome e descrição, e barra animada no item ativo.
+  - Seção nova **Geral** (agentes, arquivos, avisos) tirada de Aparência, que fica com tema, cor,
+    relevo, fundo e movimento. Grade de duas colunas.
+  - Conteúdo entra com animação ao trocar de seção.
+- [x] **Novo agente** (`AgentLauncher.tsx`, `.launcher*`):
+  - As CLIs viram cartões de escolha (`radiogroup`) com ícone grande e status (conectada, sem
+    login, não instalada), no lugar do dropdown.
+  - Cabeçalho com projeto e caminho; "Abrir" como botão principal; entrada animada.
+- [x] **Histórico e Retomar conversa** (`HistoryView.tsx`, `.historico*`):
+  - Topo e filtros em cartão; itens com ícone, pasta, conta e tempo relativo; esqueleto de
+    carregamento.
+  - Mensagens em balões (você à direita); estado vazio ilustrado.
+- [x] **Escolher a conta antes de retomar**:
+  - "Abrir na conta" no detalhe do histórico, com a conta original como padrão.
+  - Outra conta: rota nova `POST /historico/levar` (`mobile.rs`, `levar_do_historico`) copia o
+    transcript para a conta escolhida. A conversa é achada pelos campos do histórico, sem
+    caminho vindo de fora.
+  - `levarParaConta` em `historyService.ts`, usado por `App.resumeHistory` e pelo `AgentLauncher`.
+  - Testes: `historico_leva_a_conversa_para_outra_conta` (engine) e "retoma em outra conta" em
+    `AgentLauncher.resume.test.tsx`.
+- [x] **Animações**:
+  - Todo `.popover` (Select, sino, layouts, menus) entra com deslize de 140 ms, para cima ou
+    para baixo conforme o lado.
+  - Opções do Select mais altas, com barra do acento.
+  - Troca de conversa (`.chat-tela`) com fade.
+  - Tudo respeita "animações desligadas" e o reduzir movimento do Windows.
+- [x] 379 testes de front e 86 do engine verdes. Conferido com prints (Tauri simulado): Geral,
+  Aparência, novo agente, histórico, dropdown de conta e Retomar dentro do painel.
+
+## Extensões por IA e Cursor funcionando (2026-10-15, sem release)
+
+- [x] **Diagnóstico do Cursor**: a CLI estava instalada (`agent` v2026.09.10, `%LOCALAPPDATA%\cursor-agent`,
+  no PATH), logada e detectada pelo OMNI. Abrindo uma sessão pelo engine de teste, o problema
+  apareceu:
+  - O Cursor para no "Workspace Trust Required" em toda pasta nova. Na visão Conversa (e na
+    web), esse diálogo fica escondido atrás de um chat vazio ("Entrada do CLI não reconhecida").
+  - O OMNI não lê transcript do Cursor, então a timeline fica com 0 mensagens.
+- [x] **Correções do Cursor**:
+  - `comando_do_agente` em `engine_client.rs`: o Cursor abre com `--trust`, conferido no
+    interativo (abre direto no campo de mensagem). Vale para o novo agente, o kanban e a web,
+    porque a lista publicada no engine usa o mesmo `command`. Teste
+    `cursor_abre_confiando_na_pasta_e_os_outros_ficam_iguais`.
+  - `temConversa`/`AGENTES_COM_CONVERSA` em `mobile/api.ts`: a aba do Cursor fica no terminal
+    mesmo com a visão Conversa (`AbaDeAgente.tsx`), e a web abre o terminal ao vivo com a aba
+    Conversa desativada (`WebApp.tsx`). Teste em `AbaDeAgente.test.tsx`.
+- [x] **Aba Extensões nas Configurações** (`src/features/extensoes/`, comando Tauri
+  `listar_extensoes` em `src-tauri/src/extensoes.rs`, dependência `toml` 0.9 já presente no
+  lock):
+  - Abas por IA (Claude, Codex, Cursor) e por tipo (MCPs, Plugins, Conectores), com contagens.
+  - Agrupado por conta: cada conta do Claude tem as próprias extensões.
+  - MCPs com escopo (todo projeto, só numa pasta, do projeto), tipo (local stdio ou remoto),
+    destino, nomes das variáveis e o aviso "Não vale neste projeto".
+  - Plugins ligados ou desligados com origem e versão. O escopo de projeto lê o
+    `.claude/settings*.json` do projeto.
+  - Conectores do claude.ai (`claudeAiMcpEverConnected`).
+  - "Onde isso fica" com "Mostrar no Explorer"; estado vazio diz como adicionar em cada IA.
+  - **Sem segredos**: variáveis e cabeçalhos só pelo nome, URL sem query nem credencial,
+    argumentos com cara de chave mascarados. Testes `json_le_mcps_sem_expor_valores` e
+    `codex_le_mcps_e_plugins_do_toml`.
+  - Conferido na máquina real: nenhum valor sensível na saída.
+  - Teste de tela em `ExtensoesSettings.test.tsx`.
+- [x] 380+ testes de front, 86 do engine e 27 do Tauri verdes. Prints conferidos.
+- [ ] Efeito colateral do teste manual: a pasta SIAPLUS ficou marcada como confiável no Cursor
+  real, e o Cursor se atualizou sozinho para v2026.10.14 ao abrir.
+
+## Fila, tokens, contas com as mesmas extensões e release v0.6.2 (2026-10-15)
+
+- [x] **Mensagem na fila durante o turno**:
+  - `pode_enfileirar` em `interaction.rs`: "esc to interrupt" na tela, campo vazio e sem
+    aprovação. Novo `Capabilities.enfileirar` e `ActionKind::Fila` (`/prompt` com
+    `fila: true`), que pula a trava de versão da tela (muda a cada quadro) mas confere o campo
+    livre na execução.
+  - Tela: estado `fila` em `MobileApp.tsx` com o bloco "Na fila · entram quando o agente
+    terminar", que sai quando a mensagem chega ao transcript.
+  - Testes: `mensagem_durante_o_turno_entra_na_fila_da_cli` e o teste de tela em
+    `WebApp.test.tsx`. **Testado com o Claude (Haiku) de verdade**: a segunda mensagem entrou
+    na fila e foi respondida depois da primeira, pela API e pela web.
+- [x] **Botão Parar** (`Composer.tsx`, `.composer-parar*`): com rótulo, ícone pulsando devagar,
+  e o Enviar ao lado quando há texto.
+- [x] **Tokens do turno**: `tokens_do_turno` lê o "↓ 113 tokens" da linha de status, o resumo da
+  conversa manda `tokens` com o agente trabalhando, e `AgentWorking` mostra
+  "(5s · ↓ 113 tokens)". Conferido ao vivo na web. O Codex não mostra tokens durante o turno.
+- [x] **Bug corrigido**: trocar o modelo antes da primeira mensagem fechava a conversa
+  ("No conversation found"). `reabrir_com` usa `--session-id` quando ainda não há transcript.
+- [x] **Renomear arquivo** (`selecionarNome` em `FileTree.tsx`): pré-seleciona só o nome sem a
+  extensão. Teste em `RenomearArquivo.test.tsx`.
+- [x] **Arrastar de fora para a árvore**: `enter`/`over`/`leave` do Tauri acendem a pasta de
+  destino, um selo "Copiar N arquivos para «pasta»" segue o cursor e "✓ copiados" aparece
+  depois. Conferido com evento simulado.
+- [x] **Mesmas extensões em todas as contas** (`omni_core::compartilhar`):
+  - Antes de abrir sessão numa conta extra (spawn, reinício e failover em `main.rs`), leva da
+    principal os MCPs (globais e por pasta), `enabledPlugins`, os registros de plugins e as
+    pastas `skills`/`agents`/`commands` (Claude), e os `[mcp_servers]`/`[plugins]` (Codex).
+    Mescla sem apagar.
+  - Ligado por padrão (`extensoes.json`), com chave na aba Extensões.
+  - Conectores do claude.ai não são copiáveis (ficam na conta, na nuvem), e a tela explica isso.
+  - A EmailUber real já recebeu os 5 MCPs pela sessão do dev.
+- [x] **Uso das contas na web**: "Atualizar" foi para baixo das barras (encostava na borda do card
+  e espremia o nome).
+- [x] **Web**:
+  - Leitor de extensões movido para `omni_core::extensoes`. Rotas `GET /extensoes?projeto=<id>`
+    e `POST /extensoes/compartilhar`.
+  - Tela Extensões na web (`#/extensoes`, botão no topo), com a mesma `ExtensoesSettings`
+    (`FonteDeExtensoes`).
+  - Fila, Parar, tokens e status valem nos dois, porque o componente é o mesmo.
+- [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
