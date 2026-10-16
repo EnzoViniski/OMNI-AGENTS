@@ -3020,6 +3020,36 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
 
+### Pós-0.6.3 (não publicado)
+
+- [x] **Mensagem mandada no meio do turno ficava "na fila" para sempre**: o Claude Code entrega a
+  mensagem ao agente na pausa entre ferramentas e grava como `{"type":"attachment","attachment":
+  {"type":"queued_command","prompt":…,"commandMode":"prompt"}}`, não como fala do usuário. O feed
+  ignorava a linha: a bolha não saía da fila e a mensagem sumia do histórico. `feed::items` e
+  `conversations::text_message` agora leem o anexo (só `commandMode` prompt). Teste no `feed.rs`.
+- [x] **"Entrada do CLI não reconhecida" depois do primeiro turno**: o Claude Code 2.1.302 abre um
+  menu ("Teach auto mode about your environment? 1. Yes / 2. Not now / 3. Don't show again") que
+  trava o campo. Reproduzido no engine de teste (sem `NO_COLOR` herdado). `interaction::escolha`
+  reconhece qualquer menu numerado com rodapé "Enter … Esc to cancel" (fora pedidos de permissão,
+  que seguem no `approval`); `Capabilities.escolha`, rota `POST /conversas/{id}/escolher`
+  (`ActionKind::Escolha`, manda só o dígito — confirmado no CLI real — ou Esc). A conversa mostra
+  o cartão "A CLI está perguntando" com um botão por opção. Testes no engine e no front.
+- [x] **Conversa que terminou aparecia "interrompida"**: `notice_counts` só conta aviso de limite/
+  erro de API que **não** foi seguido de fala do agente (`●`) e ignora linhas "Retrying".
+  Teste `aviso_superado_no_mesmo_turno_nao_interrompe`.
+- [x] **Renomear terminal (shell) não fazia nada**: shell não tem conversa. `EngineRequest::RenameSession`
+  (engine grava `meta.name` e persiste), comando Tauri `rename_session`, `renameSession` no
+  `terminalService` usado pela lateral e pela aba.
+- [x] **Imagem enviada virava "[Image #1][Anexos enviados pelo OMNI]"**: a CLI troca o caminho por um
+  bloco base64 no transcript. `feed::Item.imagens` conta os blocos; `GET /conversas/{id}/imagens/{n}/{k}`
+  devolve `{tipo, dados}` (JSON para passar pelo protocolo do engine); o balão mostra miniaturas
+  que ampliam (portal no `body`). `[Image #N]` sai do texto, do título e do histórico
+  (`feed::sem_marcas_de_imagem`); o `-` órfão da lista de anexos é aceito por `separarAnexos`.
+- [x] **Visual do app**: aba de agente ganhou o topo da web (abas Conversa | Terminal, título e estado
+  da conversa; no modo terminal os chips de conta/modelo/esforço ficam ao lado das abas). Lateral:
+  conversas e terminais em duas linhas (avatar com selo de status, nome, situação · conta · tempo),
+  ações sobrepostas só no hover. Conferido com `app_chat.js` (mock do Tauri + engine de teste).
+
 ### v0.6.3 (publicada 2026-10-15, commit `40e61a7`)
 
 - [x] **Mensagem colada sumia da conversa** ("Não consegui confirmar o envio"): a CLI grava texto
