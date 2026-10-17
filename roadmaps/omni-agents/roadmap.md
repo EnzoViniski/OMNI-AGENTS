@@ -3020,6 +3020,73 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
 
+### Novo agente premium e dois bugs de terminal (2026-10-17, sem release)
+- [x] **"Novo terminal" abria dois**: `TerminalPane.start()` só olhava `cancelled` depois do `spawnTerminal`; com o efeito
+  rodando de novo durante a criação (StrictMode/remontagem) cada execução abria uma PTY. Agora uma criação só por
+  sessão (`criandoRef`, promessa compartilhada). Teste em `src/test/TerminalPane.test.tsx`.
+- [x] **"R", "1", ":" soltos num terminal parado**: ao reabrir a aba o xterm reproduzia o histórico e respondia de
+  novo às perguntas antigas do shell (posição do cursor, cor de fundo); a resposta ia para a PTY como digitação. Agora as
+  respostas durante a reprodução do histórico (só em sessão reatada, lendo do zero) são descartadas. Teste junto.
+- [x] **Novo agente** (`AgentLauncher.tsx`, CSS `.lz-*` em `src/index.css`): cena com janela de terminal digitando o
+  comando, mascote (Claude) ou ícone flutuando, faíscas, varredura CRT a cada troca, cartões entrando em sequência,
+  escolhido pulsando e reflexo no botão Abrir. `Mascote` exportado de `PainelVazio.tsx`. Sem animação com movimento desligado.
+- [x] **Web/celular: abertas × histórico** (`MobileApp.tsx::ConversasPorEstado`, `.m-subtitulo`): a lista do projeto
+  separa "Abertas no PC" (`live`) do "Histórico", com contagem; usada na lateral da web e na tela de projeto do celular.
+- [x] **Troca de conta continua sozinha no meio de uma tarefa** (`TerminalPane.tsx`): se o limite chega até 2 min
+  depois do agente ter sido visto trabalhando (`trabalhouEmRef`), a troca marca `continuarRef`; o poll espera a conta
+  nova mostrar o campo pronto (`/timeline` via `engineApi`) e manda `MENSAGEM_DE_CONTINUAR` pela fila (`/prompt`,
+  `fila: true`), uma vez, desistindo em 2 min. A mensagem diz que é automática. Limite já na tela ao abrir = não manda.
+- [x] **Troca de conta visível no chat** (`conversations.rs::aviso_de_troca`): na fronteira entre segmentos com conta
+  ou IA diferente entra o aviso "Conta trocada: A → B" / "IA trocada: …" (antes mesmo de existir transcript novo);
+  `LinhaDeAviso` destaca com ícone e cor do tema (`.aviso-troca`). Testes no core e no TerminalPane.
+- [x] **"Entrada do CLI não reconhecida" num agente novo e parado**: a 2.1.302 desenha o exemplo
+  `Try "fix lint errors"` com cada palavra em `dim` separado e os espaços entre elas sem estilo; `composer_vazio`
+  (`interaction.rs`) via o espaço como rascunho. Espaço em branco agora conta como vazio. Achado lendo a tela real
+  da sessão pelo protocolo local; teste com a sequência exata (falha sem a correção).
+- [x] **Campo da conversa no app** (só CSS, `src/web/web.css`, escopo `.aba-conversa-tela`): cartão em pixel com brilho
+  do tema, cantos acesos no foco, linha de luz no topo (corre no foco; barra verde indo e voltando com o agente
+  trabalhando, via `:has(.composer-parar)`), Enviar com sombra dura e reflexo. Web e celular inalterados.
+- [x] 387 testes de front verdes (com 4 workers; com paralelismo total oscilam testes de tempo já conhecidos).
+
+### Lateral, web, rodapé, painel vazio e Relatórios (2026-10-16, sem release)
+- [x] **Lateral do PC** (`src/components/Sidebar.tsx`, CSS `.lateral-*` em `src/index.css`): itens de chat em cartão
+  (nome + tempo na 1ª linha, situação + conta na 2ª), avatar com brilho e pulso verde trabalhando, aba em foco
+  marcada (`activeSessionId` vindo do `App.tsx`), contagem ao lado de CHATS/TERMINALS. Borda direita arrastável
+  224–440 px (`LARGURA`), duplo clique volta a 256, setas pelo teclado; salva em `localStorage` (`omni-lateral-largura`).
+- [x] **Web/celular — ocultar conversas**: rota `POST /conversas/{id}/ocultar {oculta}` (`mobile.rs`), lista em
+  `conversas-ocultas.json` (só ids, teto 5000, id validado); `summaries` marca `hidden`. Front filtra das listas e mostra
+  a seção recolhida `Ocultas` (`MobileApp.tsx::Ocultas`), reabre pelo botão de arquivo na conversa.
+- [x] **Web/celular — bifurcar**: `POST /conversas/{id}/bifurcar` reaproveita `bifurcar()` do `main.rs` (novo parâmetro
+  `headless`), exige sessão aberta (409 explicando), respeita `MAX_SESSOES`; botão na barra da conversa abre a nova.
+- [x] **Web — Atualizar todas** em `src/web/UsoDasContas.tsx` (Claude/Codex em paralelo).
+- [x] **Início do celular**: três números (Trabalhando / Aguardando / Projetos), seção Recentes, projetos ordenados
+  por atividade com agentes e "há X" no lugar do caminho.
+- [x] **Rodapé**: saiu o "● UI CONNECTED" (texto fixo, sem ligação com nada). Entrou `GitContaStatus`
+  (`GitBranchStatus.tsx`) com comando `git_conta` (`src-tauri/src/git_client.rs`): login do `gh auth status` ou
+  `user.name`, ícone GitHub/git verde ou amarelo com o motivo no tooltip; nunca e-mail nem token.
+- [x] **Painel vazio** (`src/features/workspace/PainelVazio.tsx`): mascote em pixel andando com falas, cartões
+  Novo agente / Novo terminal e atalhos; sem animação com movimento desligado.
+- [x] **Configurações → Relatórios** (`src/features/relatorios/RelatoriosIa.tsx`): `omni_core::relatorio` lê os
+  transcripts de todas as contas (Claude e Codex), sem conteúdo, com cache por arquivo e sem contar cópias de fork;
+  comando `relatorio_ia` (`src-tauri/src/relatorio.rs`) junta commits dos projetos abertos (`commits_recentes`, IA pelo
+  trailer `Co-Authored-By`). Mostra tokens/mensagens hoje, commits e linhas da IA, gráfico por dia, por conta/modelo/
+  projeto e por hora. Dados reais: 30 dias em ~3,5 s na 1ª leitura, ~50 ms com cache.
+- [x] Testes: front 385, core 53, engine 92, Tauri 25. Conferido em print (app via Vite, web e celular no engine de teste).
+- [ ] Próximo: entra na próxima release (changelog em linguagem de usuário).
+
+### Fundo da conversa igual à web (2026-10-16, sem release)
+- [x] Configuração nova `conversationBackground` (`"web"` padrão | `"liso"`) em `src/types/settings.ts`;
+  Configurações → Geral → Agentes → "Fundo da conversa" (`SettingsView.tsx`).
+- [x] `useSettings` grava `data-conversa` no `<html>`; a visão Conversa ganhou a classe `aba-conversa-tela`
+  (`AbaDeAgente.tsx`) e `src/web/web.css` pinta grade de pixels + brilho na cor do tema só nesse painel
+  (não depende do fundo do app, que por padrão é efeito animado).
+- [x] Movido para Configurações → Aparência, card "Conversa", com slider "Opacidade das linhas"
+  (`conversationGridOpacity` 0..100, padrão 26 → CSS `--conversa-grade` = valor/400), visível só no modo web.
+- [x] Aparência reorganizada em grade 2×2 de mesma altura (`settings-grade-par` em `src/index.css`):
+  Tema | Painéis e movimento (Relevo + Animações) / Fundo do app | Terminais e conversa.
+- [x] Conferido em print (Playwright + Vite); 385 testes de front verdes.
+- [ ] Próximo: entra na próxima release (entrada no changelog quando subir versão).
+
 ### v0.6.4 (publicada 2026-10-16, commit `99a976a`)
 
 - [x] **Mensagem mandada no meio do turno ficava "na fila" para sempre**: o Claude Code entrega a
