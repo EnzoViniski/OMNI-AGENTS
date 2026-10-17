@@ -3020,6 +3020,13 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
 
+### v0.7.0 (publicada 2026-10-17, commit `92334c9`)
+- [x] Reúne as seções abaixo marcadas "sem release" (fundo da conversa, lateral/web/rodapé/painel vazio/Relatórios,
+  Novo agente premium, bugs de terminal, campo da conversa, entrada não reconhecida, troca de conta que continua,
+  abertas × histórico).
+- [x] Typecheck, 387 testes de front (4 workers), core 54, engine 93, Tauri 25. CI verde nas 3 plataformas.
+- [x] Publicada como latest; `latest.json` = 0.7.0, 11 entradas assinadas, todos os instaladores HTTP 200.
+
 ### Novo agente premium e dois bugs de terminal (2026-10-17, sem release)
 - [x] **"Novo terminal" abria dois**: `TerminalPane.start()` só olhava `cancelled` depois do `spawnTerminal`; com o efeito
   rodando de novo durante a criação (StrictMode/remontagem) cada execução abria uma PTY. Agora uma criação só por
