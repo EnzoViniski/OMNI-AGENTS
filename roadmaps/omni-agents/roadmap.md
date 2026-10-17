@@ -3020,6 +3020,29 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
 
+### Orquestração de agentes (2026-10-17, sem release)
+- [x] Etapas 1 a 3 entregues (biblioteca de agentes, motor de fluxos, editor estilo n8n). Detalhes e pendências em
+  `roadmaps/orquestracao/roadmap.md`.
+- [x] Etapa 4: modelo/IA/esforço por agente e por nó, criar agente e fluxo inteiro com IA, JSON, execução com
+  branch/worktree/atividade ao vivo, cartão de início, conexões novas, rodapé nos fluxos e manual com prints.
+
+### Site, avisos de troca no lugar certo e narração do agente na conversa (2026-10-17, sem release)
+- [x] **Site** em <https://omni.digitaldomus.com.br> (repo privado `FelipeCamposM/omni-agents-site`, projeto Vercel
+  `omni-agents-site`, deploy a cada push). Vite + GSAP, visual do app; versão e notas buscadas do GitHub ao abrir
+  (`src/dados.js` lê o `changelog.ts` só com regex + `JSON.parse`), snapshot de reserva no build; prints do app com
+  dados do `browser_fixture` (nada real); `og-image.png` 1200×630. DNS: CNAME `omni` → Vercel na Cloudflare.
+- [x] **Avisos de troca presos no fim do chat**: voltar a uma conta grava no mesmo `.jsonl`, e as mensagens novas eram
+  lidas junto com o 1º segmento. `com_avisos_de_troca` (`conversations.rs`) agora posiciona pela hora da troca, junta
+  trocas seguidas num aviso só e omite ida-e-volta para a mesma conta. Teste com o caso real.
+- [x] **Fala do agente faltando na conversa**: a 2.1.302 grava o que diz entre ferramentas como `thinking` com texto
+  (assinado); o raciocínio oculto vem vazio. `feed.rs` mostra `thinking` com texto, como o terminal. Conferido no
+  transcript real desta sessão (frases que sumiam aparecem).
+- [x] **Atualização pedia "Repetir" no Windows** (`src-tauri/installer-hooks.nsh`): o updater abre o instalador
+  enquanto o app ainda fecha, e o Windows demora a soltar o `.exe`; a cópia falhava com "Erro ao abrir para
+  escrita". O hook (antes da cópia e da desinstalação) agora espera app, engine e shim saírem (forçando após 2,5 s,
+  desiste em 10 s) e só segue quando cada `.exe` aceita abrir para escrita. Compilado com o makensis do Tauri.
+- [ ] Próximo: release 0.7.1 para chegar ao app instalado.
+
 ### v0.7.0 (publicada 2026-10-17, commit `92334c9`)
 - [x] Reúne as seções abaixo marcadas "sem release" (fundo da conversa, lateral/web/rodapé/painel vazio/Relatórios,
   Novo agente premium, bugs de terminal, campo da conversa, entrada não reconhecida, troca de conta que continua,
@@ -3154,3 +3177,25 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
   principal), quebra silenciosa a cada versão do Claude Code e conflito na renovação do login.
   Fica como está: cada conta conecta os seus em claude.ai → Configurações → Conectores (a aba
   Extensões já explica). Não retomar sem nova decisão do usuário.
+- [x] **Resumo de agentes nas linhas de Workspaces e Projects** (2026-10-17). Linhas no mesmo
+  visual dos chats (avatar 8×8, duas linhas, `lateral-item`); a segunda linha traz um selo por
+  (agente, status): ícone do agente, cor do status e quantos. `ResumoDeAgentes` em
+  `src/components/ConversaStatus.tsx`; App passa `agentSessions` (todas as conversas vivas) à
+  `Sidebar` e à `WorkspaceList`. Sessões encerradas ficam de fora.
+- [x] **Terminal com dev server aparecia "parado"** (2026-10-17). Shell puro virava `Answered` após
+  1,5 s sem saída. Agora `settle` (`crates/omni-engine/src/main.rs`) mantém `Working` enquanto o
+  shell tem processo filho (`interaction::has_children`, ToolHelp no Windows / `ps` fora). Teste
+  `shell_com_filho_vivo_conta_como_ocupado`.
+- [x] **Histórico de conversas no visual dos chats** (2026-10-17). Lista em
+  `src/features/history/HistoryView.tsx` usa o cartão da lateral (avatar 8×8, duas linhas);
+  CSS `.historico-item*` removido de `src/index.css`.
+- [x] **Tarefas pessoais na lateral** (2026-10-17). Seção TAREFAS (global, não é o Kanban dos
+  agentes): adicionar com Enter, concluir, apagar, limpar concluídas; contador de pendentes.
+  `src/features/todo/TodoList.tsx` (localStorage `omni-todo`), teste `src/test/todo.test.tsx`.
+- [x] **Relatórios rápidos + visual novo** (2026-10-17). Cache dos transcripts agora em disco
+  (`<engine_dir>/relatorio-cache.json`) e incremental: cada `.jsonl` é lido só a partir do byte
+  onde parou (`linhas_novas` em `crates/omni-core/src/relatorio.rs`, teste `continua_de_onde_parou`).
+  Git dos projetos roda em paralelo (`src-tauri/src/relatorio.rs`); commit agora traz `removidas`.
+  A tela abre com o último resultado (localStorage `omni-relatorio-v1-<dias>`) e atualiza por trás.
+  Visual: 6 cartões com ícone (tokens do período, % de cache, dias com uso/sequência, linhas +/−),
+  títulos com ícone, "Git por projeto" com ícone de branch, último commit e +/− da IA.
