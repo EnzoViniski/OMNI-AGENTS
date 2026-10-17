@@ -3020,7 +3020,14 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
 
-### Orquestração de agentes (2026-10-17, sem release)
+### v0.7.1 (publicada 2026-10-17, commit `902eec8`)
+- [x] Reúne orquestração (etapas 1–4), site/avisos/narração/instalador e o trabalho da outra sessão (resumo de
+  agentes na lateral, tarefas pessoais, histórico no visual dos chats, shell com filho = ocupado, relatórios
+  incrementais). Commits separados: `d3535c4` (fixes), `9a24f04` (relatórios), `f4f779c` (lateral/tarefas),
+  `7ead4ac` (fluxos), `902eec8` (versão + notas).
+- [x] CI e Release verdes nas 3 plataformas; `latest.json` = 0.7.1 com assinaturas; todos os instaladores HTTP 200.
+
+### Orquestração de agentes (2026-10-17, entrou na 0.7.1)
 - [x] Etapas 1 a 3 entregues (biblioteca de agentes, motor de fluxos, editor estilo n8n). Detalhes e pendências em
   `roadmaps/orquestracao/roadmap.md`.
 - [x] Etapa 4: modelo/IA/esforço por agente e por nó, criar agente e fluxo inteiro com IA, JSON, execução com
@@ -3041,7 +3048,7 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
   enquanto o app ainda fecha, e o Windows demora a soltar o `.exe`; a cópia falhava com "Erro ao abrir para
   escrita". O hook (antes da cópia e da desinstalação) agora espera app, engine e shim saírem (forçando após 2,5 s,
   desiste em 10 s) e só segue quando cada `.exe` aceita abrir para escrita. Compilado com o makensis do Tauri.
-- [ ] Próximo: release 0.7.1 para chegar ao app instalado.
+- [x] Publicado na 0.7.1.
 
 ### v0.7.0 (publicada 2026-10-17, commit `92334c9`)
 - [x] Reúne as seções abaixo marcadas "sem release" (fundo da conversa, lateral/web/rodapé/painel vazio/Relatórios,
