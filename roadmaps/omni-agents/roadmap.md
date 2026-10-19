@@ -3031,11 +3031,14 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
 
-### v0.7.2 (2026-10-19)
+### v0.7.2 (publicada 2026-10-19, commit `899bc43`)
 - [x] Reúne as seções abaixo marcadas "sem release" (perguntas do agente, imagens no chat, Mac, celular sem
   arraste lateral) e o Antigravity da outra sessão. Commits: backend + Antigravity, front das perguntas/celular,
   versão + notas. Verificado antes: tsc, 391 testes de front, 72 do core, 100 do engine, `cargo check` do Tauri.
-- [ ] CI/Release publicada, `latest.json` 0.7.2 e instaladores conferidos.
+- [x] 1º CI falhou no Mac/Linux: teste de imagem citada com espaço no caminho (`/…` não aceitava espaço — o print
+  padrão do Mac tem espaço). Corrigido em `899bc43`, build cancelado e tag `v0.7.2` movida antes de publicar.
+- [x] CI e Release verdes nas 3 plataformas; publicada como latest; `latest.json` = 0.7.2 com assinatura nas 11
+  entradas; instaladores (exe, dmg, AppImage, app.tar.gz) HTTP 200.
 
 ### macOS: conversa travada em "Entrada do CLI não reconhecida" (2026-10-18, entrou na 0.7.2)
 - [x] Relato de usuário no Mac: conversa sempre bloqueada, sem trocar modelo nem nada. Causa: o Claude Code
