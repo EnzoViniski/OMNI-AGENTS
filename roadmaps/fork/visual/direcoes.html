@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direções visuais</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --page-bg: #F3F2EF;
+  --page-fg: #1C1C1F;
+  --page-muted: #66656B;
+  --page-line: #DCDAD4;
+  --page-card: #FFFFFF;
+  --page-chip-ring: rgb(0 0 0 / .12);
+  --page-shadow: 0 40px 80px -40px rgb(20 20 30 / .35), 0 2px 6px rgb(20 20 30 / .06);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page-bg: #101012;
+    --page-fg: #ECEBE8;
+    --page-muted: #9A99A0;
+    --page-line: #2A2A2F;
+    --page-card: #18181B;
+    --page-chip-ring: rgb(255 255 255 / .16);
+    --page-shadow: 0 40px 80px -30px rgb(0 0 0 / .7), 0 0 0 1px rgb(255 255 255 / .04);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page-bg: #101012;
+  --page-fg: #ECEBE8;
+  --page-muted: #9A99A0;
+  --page-line: #2A2A2F;
+  --page-card: #18181B;
+  --page-chip-ring: rgb(255 255 255 / .16);
+  --page-shadow: 0 40px 80px -30px rgb(0 0 0 / .7), 0 0 0 1px rgb(255 255 255 / .04);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--page-fg);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+code { font-family: "SF Mono", Menlo, monospace; font-size: .86em; }
+.page { max-width: 1320px; margin: 0 auto; padding: 32px 24px 48px; }
+.top { display: flex; gap: 24px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; }
+.top-t { max-width: 720px; }
+.kicker { margin: 0 0 4px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--page-muted); }
+h1 { margin: 0; font: 600 34px/1.1 -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; letter-spacing: -.02em; }
+.lead { margin: 10px 0 0; color: var(--page-muted); text-wrap: pretty; }
+.theme { display: inline-flex; border: 1px solid var(--page-line); border-radius: 8px; padding: 2px; background: var(--page-card); }
+.theme button { font: inherit; font-size: 13px; border: 0; background: none; color: var(--page-muted); padding: 5px 12px; border-radius: 6px; cursor: pointer; }
+.theme button[aria-pressed="true"] { background: var(--page-fg); color: var(--page-bg); }
+
+/* cartões de comparação = abas */
+.cmps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 28px 0 8px; }
+.cmp {
+  text-align: left; cursor: pointer; display: grid; gap: 6px; padding: 14px 16px;
+  background: rgb(var(--c-bg-surface)); color: rgb(var(--c-text-primary));
+  border: 1px solid rgb(var(--c-border-subtle)); border-radius: var(--r);
+  font-family: var(--f-ui); transition: transform .15s ease, box-shadow .15s ease;
+}
+.cmp:hover { transform: translateY(-1px); }
+.cmp[aria-selected="true"] { box-shadow: 0 0 0 2px rgb(var(--c-accent)); }
+.cmp:focus-visible { outline: 2px solid var(--page-fg); outline-offset: 3px; }
+.cmp-n { font-family: var(--f-display); font-size: 20px; font-weight: 600; line-height: 1.1; }
+.cmp-t { font-size: 12px; color: rgb(var(--c-text-secondary)); }
+.cmp-dots { display: flex; gap: 4px; }
+.cmp-dots i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--page-chip-ring); }
+.cmp-a { font-family: var(--f-display); font-size: 18px; }
+.cmp-a span { font-family: var(--f-mono); font-size: 12px; color: rgb(var(--c-success)); margin-left: 6px; }
+.dir-sinal.cmp .cmp-n { text-transform: uppercase; letter-spacing: .08em; }
+
+.dir { margin-top: 28px; }
+.dir[hidden] { display: none; }
+.dir-head h2 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 40px; line-height: 1.05; letter-spacing: -.01em; }
+.dir-sinal .dir-head h2 { text-transform: uppercase; letter-spacing: .06em; font-size: 36px; }
+.frase { max-width: 70ch; margin: 8px 0 0; color: var(--page-muted); text-wrap: pretty; }
+.stage { margin-top: 20px; }
+
+/* specs */
+.specs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.spec { background: var(--page-card); border: 1px solid var(--page-line); border-radius: 10px; padding: 16px; min-width: 0; }
+.spec.wide { grid-column: 1 / -1; }
+.spec h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+.spec .muted { color: var(--page-muted); font-weight: 400; }
+.note { margin: 8px 0 0; font-size: 13px; color: var(--page-muted); text-wrap: pretty; }
+.t-d { margin: 0; font-family: var(--f-display); font-size: 28px; font-weight: 600; line-height: 1.15; }
+.dir-sinal .t-d { text-transform: uppercase; letter-spacing: .05em; }
+.t-u { margin: 6px 0 0; font-family: var(--f-ui); font-size: 14px; }
+.t-m { margin: 6px 0 0; font-family: var(--f-mono); font-size: 13px; }
+.radii { display: flex; gap: 10px; flex-wrap: wrap; }
+.radii span { display: grid; place-items: center; text-align: center; width: 76px; height: 56px; font-size: 11px; line-height: 1.3; color: var(--page-muted); border: 1.5px solid var(--page-fg); }
+.sws { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 14px; }
+.sw { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; font-size: 12px; }
+.sw code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip { width: 22px; height: 22px; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--page-chip-ring); }
+.hx { font-family: "SF Mono", Menlo, monospace; font-size: 11px; color: var(--page-muted); }
+.code { margin: 10px 0 0; padding: 12px; border-radius: 8px; background: var(--page-bg); border: 1px solid var(--page-line); font: 12px/1.55 "SF Mono", Menlo, monospace; white-space: pre-wrap; word-break: break-word; }
+.foot { margin-top: 32px; font-size: 12px; color: var(--page-muted); }
+
+/* ================= mockup ================= */
+.mk { font-family: var(--f-ui); font-size: var(--fs); color: rgb(var(--c-text-primary)); line-height: 1.4; }
+.mk b { font-weight: 600; }
+.win {
+  background: rgb(var(--c-bg-primary)); border: 1px solid rgb(var(--c-border));
+  border-radius: var(--r-win); overflow: hidden; box-shadow: var(--page-shadow);
+}
+.tb { height: var(--tb); display: flex; align-items: center; gap: 12px; padding: 0 10px 0 12px;
+  background: rgb(var(--c-bg-surface)); border-bottom: 1px solid rgb(var(--c-border-subtle)); min-width: 0; }
+.lights { display: flex; gap: 8px; flex: none; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; background: #FF5F57; box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .15); }
+.lights i:nth-child(2) { background: #FEBC2E; } .lights i:nth-child(3) { background: #28C840; }
+.brand { display: flex; align-items: center; gap: 7px; font-family: var(--f-display); font-weight: 600; flex: none; }
+.mark { display: inline-grid; place-items: center; }
+.crumbs { display: flex; gap: 6px; min-width: 0; color: rgb(var(--c-text-muted)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crumbs .sep { color: rgb(var(--c-text-muted)); }
+.crumbs .cur { color: rgb(var(--c-text-secondary)); font-weight: 500; }
+.tb-right { margin-left: auto; display: flex; gap: 2px; flex: none; }
+.ico { position: relative; width: 28px; height: 24px; display: grid; place-items: center; border-radius: var(--r-ctl); color: rgb(var(--c-text-secondary)); }
+.ico:hover { background: rgb(var(--c-overlay) / .07); }
+.ico svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.bell i { position: absolute; top: 4px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--c-warning)); }
+
+.layout { display: grid; grid-template-columns: var(--side) minmax(0, 1fr) 252px; min-height: 540px; }
+.side { background: rgb(var(--c-bg-surface)); border-right: 1px solid rgb(var(--c-border-subtle)); padding: 12px 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lbl { font-size: 11px; font-weight: 600; color: rgb(var(--c-text-muted)); padding: 4px 8px; }
+.plist { display: flex; flex-direction: column; gap: 1px; }
+.proj { height: var(--row); display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: var(--r-ctl); color: rgb(var(--c-text-secondary)); min-width: 0; position: relative; }
+.proj:hover { background: rgb(var(--c-overlay) / .05); }
+.proj.on { background: rgb(var(--c-overlay) / .07); color: rgb(var(--c-text-primary)); font-weight: 500; }
+.pi { width: 14px; height: 11px; flex: none; border: 1.4px solid currentColor; border-radius: 2px; opacity: .7; }
+.pn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proj .n { margin-left: auto; display: flex; gap: 4px; }
+.side-foot { margin-top: auto; padding: 8px; font-size: 11px; color: rgb(var(--c-text-muted)); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; border-top: 1px solid rgb(var(--c-border-subtle)); }
+
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex: none; background: rgb(var(--c-text-muted)); }
+.dot.run { background: rgb(var(--c-accent)); box-shadow: 0 0 0 0 rgb(var(--c-accent) / .5); animation: pulse 1.8s ease-out infinite; }
+.dot.wait { background: rgb(var(--c-warning)); }
+.dot.done { background: rgb(var(--c-success)); }
+.dot.err { background: rgb(var(--c-danger)); }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgb(var(--c-accent) / .55); } 80%, 100% { box-shadow: 0 0 0 6px rgb(var(--c-accent) / 0); } }
+
+.main { display: flex; flex-direction: column; min-width: 0; }
+.tabs { display: flex; gap: 2px; padding: 6px 8px 0; background: rgb(var(--c-bg-surface)); border-bottom: 1px solid rgb(var(--c-border-subtle)); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; display: flex; align-items: center; gap: 8px; height: calc(var(--row) + 4px); padding: 0 12px; border-radius: var(--r-ctl) var(--r-ctl) 0 0; color: rgb(var(--c-text-secondary)); white-space: nowrap; }
+.tab:hover { background: rgb(var(--c-overlay) / .05); }
+.tab.on { background: rgb(var(--c-bg-primary)); color: rgb(var(--c-text-primary)); box-shadow: inset 0 2px 0 rgb(var(--c-accent)); }
+.tab .sub { color: rgb(var(--c-text-muted)); font-weight: 400; }
+.tab b { font-weight: 500; }
+.tab.add { color: rgb(var(--c-text-muted)); font-size: 16px; padding: 0 10px; }
+.av { display: none; }
+.st { font-size: 11px; color: rgb(var(--c-text-muted)); }
+.st.wait { color: rgb(var(--c-warning)); } .st.err { color: rgb(var(--c-danger)); } .st.done { color: rgb(var(--c-success)); } .st.run { color: rgb(var(--c-accent)); }
+
+.pane-h { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid rgb(var(--c-border-subtle)); flex-wrap: wrap; }
+.ph-t { display: flex; align-items: baseline; gap: 8px; margin-right: auto; min-width: 0; }
+.ph-s { color: rgb(var(--c-text-muted)); font-size: .92em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { font-family: var(--f-mono); font-size: 11px; padding: 2px 8px; border: 1px solid rgb(var(--c-border)); border-radius: 999px; color: rgb(var(--c-text-secondary)); white-space: nowrap; }
+.badge .k { color: rgb(var(--c-text-muted)); }
+.badge.model { border-color: rgb(var(--c-accent) / .5); background: rgb(var(--c-accent) / .08); }
+.badge.model b { color: rgb(var(--c-accent)); font-weight: 600; }
+
+.term { flex: 1; margin: 0; padding: 14px 16px; font-family: var(--f-mono); font-size: 12px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; color: rgb(var(--c-text-primary)); background: rgb(var(--c-bg-primary)); }
+.term .a { color: rgb(var(--c-accent)); } .term .g { color: rgb(var(--c-success)); } .term .r { color: rgb(var(--c-danger)); }
+.term .y { color: rgb(var(--c-warning)); } .term .m { color: rgb(var(--c-text-muted)); } .term .s { color: rgb(var(--c-text-secondary)); }
+.term .b { font-weight: 600; } .term .c { color: rgb(var(--c-accent-hover)); }
+.term .add { display: inline-block; width: 100%; background: rgb(var(--c-success) / .12); color: rgb(var(--c-success)); }
+.term .del { display: inline-block; width: 100%; background: rgb(var(--c-danger) / .1); color: rgb(var(--c-danger)); }
+.spin { display: inline-block; animation: spin 2.4s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.input { display: flex; align-items: center; gap: 10px; margin: 0 12px 12px; padding: 10px 12px; border: 1px solid rgb(var(--c-border)); border-radius: var(--r); background: rgb(var(--c-bg-surface)); }
+.input .a { color: rgb(var(--c-accent)); font-family: var(--f-mono); }
+.input .ph { color: rgb(var(--c-text-muted)); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+kbd { font-family: var(--f-mono); font-size: 11px; padding: 1px 6px; border: 1px solid rgb(var(--c-border)); border-radius: var(--r-ctl); color: rgb(var(--c-text-muted)); }
+
+.usage { background: rgb(var(--c-bg-surface)); border-left: 1px solid rgb(var(--c-border-subtle)); padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.usage .lbl { padding: 4px 4px 0; }
+.card { background: rgb(var(--c-bg-primary)); border: 1px solid rgb(var(--c-border-subtle)); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ch { display: flex; align-items: center; gap: 8px; }
+.acct { margin-left: auto; font-size: 11px; color: rgb(var(--c-text-muted)); }
+.mrow { display: flex; justify-content: space-between; font-size: 12px; }
+.ml { color: rgb(var(--c-text-secondary)); }
+.mv { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.mv.warn { color: rgb(var(--c-warning)); }
+.bar { height: 6px; margin-top: 5px; border-radius: 999px; background: rgb(var(--c-overlay) / .09); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: inherit; background: rgb(var(--c-accent)); }
+.bar.warn i { background: rgb(var(--c-warning)); }
+.mr { margin-top: 4px; font-size: 11px; color: rgb(var(--c-text-muted)); }
+
+.sbar { display: flex; gap: 16px; align-items: center; height: 26px; padding: 0 12px; border-top: 1px solid rgb(var(--c-border-subtle)); background: rgb(var(--c-bg-surface)); font-size: 11px; color: rgb(var(--c-text-muted)); white-space: nowrap; overflow: hidden; }
+.sbar span { display: flex; align-items: center; gap: 6px; }
+.sbar .dot.run { animation: none; }
+.sb-r { margin-left: auto; font-family: var(--f-mono); }
+.readout { display: none; }
+
+/* ---------- Grafite: editorial ---------- */
+.dir-grafite .mark { width: 20px; height: 20px; border: 1.5px solid rgb(var(--c-text-primary)); border-radius: 4px; font-family: var(--f-display); font-size: 14px; line-height: 1; }
+.dir-grafite .brand { font-size: 15px; letter-spacing: .01em; }
+.dir-grafite .lbl { font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: 14px; color: rgb(var(--c-text-secondary)); }
+.dir-grafite .tab.on { box-shadow: inset 0 -2px 0 rgb(var(--c-accent)); }
+.dir-grafite .proj.on::before { content: ""; position: absolute; left: -8px; top: 7px; bottom: 7px; width: 2px; background: rgb(var(--c-accent)); }
+.dir-grafite .ph-t b { font-family: var(--f-display); font-size: 17px; }
+.dir-grafite .badge.model { background: none; }
+
+/* ---------- Sinal: instrumento ---------- */
+.dir-sinal .mk, .dir-sinal.mk { letter-spacing: 0; }
+.dir-sinal .mark { color: rgb(var(--c-accent)); font-family: var(--f-ui); font-weight: 600; }
+.dir-sinal .brand { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .14em; font-size: 12px; }
+.dir-sinal .lbl, .dir-sinal .ml, .dir-sinal .st, .dir-sinal .acct, .dir-sinal .badge .k, .dir-sinal .sbar {
+  font-family: var(--f-display); text-transform: uppercase; letter-spacing: .1em; font-size: 10.5px; }
+.dir-sinal .st { padding: 1px 5px; border: 1px solid currentColor; border-radius: 1px; font-weight: 600; }
+.dir-sinal .crumbs { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+.dir-sinal .readout { display: flex; gap: 6px; font-size: 11px; color: rgb(var(--c-text-secondary)); white-space: nowrap; font-variant-numeric: tabular-nums; padding: 2px 8px; border: 1px solid rgb(var(--c-border-subtle)); }
+.dir-sinal .readout b { font-family: var(--f-display); font-weight: 600; color: rgb(var(--c-text-muted)); letter-spacing: .08em; }
+.dir-sinal .tabs { padding: 0; gap: 0; }
+.dir-sinal .tab { border-radius: 0; border-right: 1px solid rgb(var(--c-border-subtle)); }
+.dir-sinal .tab.on { box-shadow: inset 0 -2px 0 rgb(var(--c-accent)); }
+.dir-sinal .dot { border-radius: 1px; }
+.dir-sinal .proj.on { box-shadow: inset 2px 0 0 rgb(var(--c-accent)); }
+.dir-sinal .badge { border-radius: 1px; }
+.dir-sinal .badge.model { background: rgb(var(--c-accent)); border-color: rgb(var(--c-accent)); color: rgb(var(--c-bg-primary)); }
+.dir-sinal .badge.model b, .dir-sinal .badge.model .k { color: rgb(var(--c-bg-primary)); }
+.dir-sinal .term { background-image: repeating-linear-gradient(0deg, rgb(var(--c-overlay) / .025) 0 1px, transparent 1px 3px); }
+.dir-sinal .mv { font-family: var(--f-display); font-size: 18px; font-weight: 600; line-height: 1; }
+.dir-sinal .bar { height: 10px; border-radius: 0; background: repeating-linear-gradient(90deg, rgb(var(--c-overlay) / .1) 0 5px, transparent 5px 7px); }
+.dir-sinal .bar i { border-radius: 0; -webkit-mask: repeating-linear-gradient(90deg, #000 0 5px, transparent 5px 7px); mask: repeating-linear-gradient(90deg, #000 0 5px, transparent 5px 7px); }
+.dir-sinal .card { background: transparent; }
+.dir-sinal .ph-t b { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .1em; }
+.dir-sinal .win { box-shadow: var(--page-shadow); }
+.dir-sinal .side { background: rgb(var(--c-bg-primary)); }
+
+/* ---------- Barro: quente ---------- */
+.dir-barro .mark { width: 22px; height: 22px; border-radius: 50%; background: rgb(var(--c-accent)); color: rgb(var(--c-bg-surface)); font-family: var(--f-display); font-size: 15px; line-height: 1; padding-bottom: 2px; }
+.dir-barro .brand { font-size: 16px; }
+.dir-barro .lbl { font-family: var(--f-display); font-size: 14px; font-weight: 500; color: rgb(var(--c-text-secondary)); }
+.dir-barro .av { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; flex: none; font-size: 9.5px; font-weight: 600; letter-spacing: .02em; background: rgb(var(--c-bg-elevated)); color: rgb(var(--c-text-secondary)); }
+.dir-barro .av.big { width: 30px; height: 30px; font-size: 11px; background: rgb(var(--c-accent) / .15); color: rgb(var(--c-accent)); }
+.dir-barro .tab .dot { display: none; }
+.dir-barro .tabs { padding: 8px 10px; gap: 4px; border-bottom: 1px solid rgb(var(--c-border-subtle)); }
+.dir-barro .tab { border-radius: 999px; height: var(--row); padding: 0 12px 0 6px; }
+.dir-barro .tab.on { background: rgb(var(--c-bg-primary)); box-shadow: 0 0 0 1px rgb(var(--c-border-subtle)), 0 2px 6px -2px rgb(var(--c-overlay) / .2); }
+.dir-barro .tab.add { padding: 0 12px; }
+.dir-barro .st { padding: 2px 8px; border-radius: 999px; background: rgb(var(--c-overlay) / .06); }
+.dir-barro .st.wait { background: rgb(var(--c-warning) / .14); } .dir-barro .st.run { background: rgb(var(--c-accent) / .12); }
+.dir-barro .st.done { background: rgb(var(--c-success) / .14); } .dir-barro .st.err { background: rgb(var(--c-danger) / .12); }
+.dir-barro .proj.on { background: rgb(var(--c-accent) / .1); color: rgb(var(--c-accent-hover)); }
+.dir-barro .pi { border-radius: 4px; }
+.dir-barro .ph-t b { font-family: var(--f-display); font-size: 17px; font-weight: 600; }
+.dir-barro .term { margin: 12px; border-radius: var(--r); background: rgb(var(--c-bg-surface)); border: 1px solid rgb(var(--c-border-subtle)); }
+.dir-barro .input { border-radius: 999px; padding: 10px 16px; }
+.dir-barro .card { box-shadow: 0 1px 2px rgb(var(--c-overlay) / .06); background: rgb(var(--c-bg-surface)); }
+.dir-barro .usage { background: rgb(var(--c-bg-primary)); }
+.dir-barro .bar { height: 8px; }
+.dir-barro .side { background: rgb(var(--c-bg-elevated) / .55); }
+
+/* ---------- responsivo ---------- */
+@media (max-width: 1180px) {
+  .layout { grid-template-columns: var(--side) minmax(0, 1fr); }
+  .usage { grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(var(--c-border-subtle)); display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .usage .lbl { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .page { padding: 20px 16px 40px; }
+  h1 { font-size: 28px; }
+  .dir-head h2 { font-size: 32px; }
+  .cmps { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .cmp { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .cmp-dots, .cmp-a { grid-column: 1 / -1; }
+  .specs { grid-template-columns: minmax(0, 1fr); }
+  .layout { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .side { flex-direction: row; align-items: center; border-right: 0; border-bottom: 1px solid rgb(var(--c-border-subtle)); padding: 6px 8px; overflow-x: auto; scrollbar-width: none; }
+  .side::-webkit-scrollbar { display: none; }
+  .side > .lbl, .side-foot { display: none; }
+  .plist { flex-direction: row; gap: 4px; }
+  .proj { flex: none; }
+  .dir-grafite .proj.on::before { left: 8px; right: 8px; top: auto; bottom: 0; width: auto; height: 2px; }
+  .crumbs > span:not(.cur), .hide-s, .readout, .tab .sub { display: none !important; }
+  .term { font-size: 11px; padding: 12px; }
+  .dir-barro .term { margin: 8px; }
+  .usage { grid-template-columns: minmax(0, 1fr); }
+  .tb { gap: 8px; }
+  .sws { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot.run, .spin { animation: none; }
+  .cmp { transition: none; }
+}
+
+/* ---- tokens de cada direção (mesmos nomes do app) ---- */
+.dir-grafite {
+  --f-display: 'Newsreader', 'New York', Georgia, serif;
+  --f-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --f-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --r-win: 10px; --r: 6px; --r-ctl: 4px;
+  --tb: 38px; --row: 30px; --fs: 13px; --side: 208px;
+  --c-bg-primary: 246 245 242;
+  --c-bg-surface: 255 255 255;
+  --c-bg-elevated: 238 237 233;
+  --c-border-subtle: 228 226 220;
+  --c-border: 208 205 197;
+  --c-accent: 37 70 214;
+  --c-accent-hover: 28 52 168;
+  --c-selected: 37 70 214;
+  --c-selected-deep: 28 52 168;
+  --c-text-primary: 23 23 26;
+  --c-text-secondary: 87 86 92;
+  --c-text-muted: 133 131 138;
+  --c-success: 21 128 61;
+  --c-danger: 190 42 30;
+  --c-warning: 161 98 7;
+  --c-overlay: 20 20 30;
+  --c-outline: 208 205 197;
+  --glass-rgb: 255 255 255;
+  --glass-a: 1;
+  --glass-a-hover: 1;
+  --app-bg-veil: 246 245 242;
+  --app-bg-veil-a: 0.72;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .dir-grafite {
+    --c-bg-primary: 17 17 19;
+    --c-bg-surface: 24 24 27;
+    --c-bg-elevated: 32 32 36;
+    --c-border-subtle: 40 40 45;
+    --c-border: 60 60 66;
+    --c-accent: 132 154 255;
+    --c-accent-hover: 104 126 240;
+    --c-selected: 132 154 255;
+    --c-selected-deep: 104 126 240;
+    --c-text-primary: 236 235 232;
+    --c-text-secondary: 162 161 167;
+    --c-text-muted: 112 111 118;
+    --c-success: 86 204 128;
+    --c-danger: 240 104 92;
+    --c-warning: 228 172 64;
+    --c-overlay: 255 255 255;
+    --c-outline: 60 60 66;
+    --glass-rgb: 24 24 27;
+    --glass-a: 1;
+    --glass-a-hover: 1;
+    --app-bg-veil: 17 17 19;
+    --app-bg-veil-a: 0.6;
+  }
+}
+:root[data-theme="dark"] .dir-grafite {
+  --c-bg-primary: 17 17 19;
+  --c-bg-surface: 24 24 27;
+  --c-bg-elevated: 32 32 36;
+  --c-border-subtle: 40 40 45;
+  --c-border: 60 60 66;
+  --c-accent: 132 154 255;
+  --c-accent-hover: 104 126 240;
+  --c-selected: 132 154 255;
+  --c-selected-deep: 104 126 240;
+  --c-text-primary: 236 235 232;
+  --c-text-secondary: 162 161 167;
+  --c-text-muted: 112 111 118;
+  --c-success: 86 204 128;
+  --c-danger: 240 104 92;
+  --c-warning: 228 172 64;
+  --c-overlay: 255 255 255;
+  --c-outline: 60 60 66;
+  --glass-rgb: 24 24 27;
+  --glass-a: 1;
+  --glass-a-hover: 1;
+  --app-bg-veil: 17 17 19;
+  --app-bg-veil-a: 0.6;
+}
+.dir-sinal {
+  --f-display: 'IBM Plex Sans Condensed', 'SF Pro Display', sans-serif;
+  --f-ui: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --f-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --r-win: 4px; --r: 2px; --r-ctl: 2px;
+  --tb: 30px; --row: 24px; --fs: 12px; --side: 188px;
+  --c-bg-primary: 236 236 230;
+  --c-bg-surface: 246 246 241;
+  --c-bg-elevated: 226 226 219;
+  --c-border-subtle: 212 212 204;
+  --c-border: 176 176 166;
+  --c-accent: 150 92 0;
+  --c-accent-hover: 120 72 0;
+  --c-selected: 150 92 0;
+  --c-selected-deep: 120 72 0;
+  --c-text-primary: 20 22 18;
+  --c-text-secondary: 74 78 68;
+  --c-text-muted: 116 120 108;
+  --c-success: 28 128 58;
+  --c-danger: 196 38 38;
+  --c-warning: 186 78 8;
+  --c-overlay: 20 22 18;
+  --c-outline: 176 176 166;
+  --glass-rgb: 246 246 241;
+  --glass-a: 1;
+  --glass-a-hover: 1;
+  --app-bg-veil: 236 236 230;
+  --app-bg-veil-a: 0.7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .dir-sinal {
+    --c-bg-primary: 11 12 10;
+    --c-bg-surface: 17 18 16;
+    --c-bg-elevated: 25 27 23;
+    --c-border-subtle: 37 40 34;
+    --c-border: 58 62 52;
+    --c-accent: 255 176 0;
+    --c-accent-hover: 214 145 0;
+    --c-selected: 255 176 0;
+    --c-selected-deep: 214 145 0;
+    --c-text-primary: 222 226 210;
+    --c-text-secondary: 144 152 132;
+    --c-text-muted: 94 100 86;
+    --c-success: 98 214 120;
+    --c-danger: 255 84 76;
+    --c-warning: 255 128 48;
+    --c-overlay: 222 226 210;
+    --c-outline: 58 62 52;
+    --glass-rgb: 17 18 16;
+    --glass-a: 1;
+    --glass-a-hover: 1;
+    --app-bg-veil: 11 12 10;
+    --app-bg-veil-a: 0.55;
+  }
+}
+:root[data-theme="dark"] .dir-sinal {
+  --c-bg-primary: 11 12 10;
+  --c-bg-surface: 17 18 16;
+  --c-bg-elevated: 25 27 23;
+  --c-border-subtle: 37 40 34;
+  --c-border: 58 62 52;
+  --c-accent: 255 176 0;
+  --c-accent-hover: 214 145 0;
+  --c-selected: 255 176 0;
+  --c-selected-deep: 214 145 0;
+  --c-text-primary: 222 226 210;
+  --c-text-secondary: 144 152 132;
+  --c-text-muted: 94 100 86;
+  --c-success: 98 214 120;
+  --c-danger: 255 84 76;
+  --c-warning: 255 128 48;
+  --c-overlay: 222 226 210;
+  --c-outline: 58 62 52;
+  --glass-rgb: 17 18 16;
+  --glass-a: 1;
+  --glass-a-hover: 1;
+  --app-bg-veil: 11 12 10;
+  --app-bg-veil-a: 0.55;
+}
+.dir-barro {
+  --f-display: 'Fraunces', 'New York', Georgia, serif;
+  --f-ui: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --f-mono: 'DM Mono', 'SF Mono', Menlo, monospace;
+  --r-win: 16px; --r: 12px; --r-ctl: 8px;
+  --tb: 42px; --row: 34px; --fs: 13.5px; --side: 216px;
+  --c-bg-primary: 247 241 233;
+  --c-bg-surface: 253 250 245;
+  --c-bg-elevated: 240 231 220;
+  --c-border-subtle: 233 221 206;
+  --c-border: 214 197 177;
+  --c-accent: 184 74 46;
+  --c-accent-hover: 150 58 34;
+  --c-selected: 184 74 46;
+  --c-selected-deep: 150 58 34;
+  --c-text-primary: 43 31 24;
+  --c-text-secondary: 112 92 78;
+  --c-text-muted: 150 130 114;
+  --c-success: 70 120 66;
+  --c-danger: 160 40 72;
+  --c-warning: 168 110 18;
+  --c-overlay: 60 40 20;
+  --c-outline: 214 197 177;
+  --glass-rgb: 253 250 245;
+  --glass-a: 1;
+  --glass-a-hover: 1;
+  --app-bg-veil: 247 241 233;
+  --app-bg-veil-a: 0.7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .dir-barro {
+    --c-bg-primary: 28 22 19;
+    --c-bg-surface: 36 29 25;
+    --c-bg-elevated: 47 39 34;
+    --c-border-subtle: 58 48 42;
+    --c-border: 82 69 60;
+    --c-accent: 232 132 98;
+    --c-accent-hover: 210 108 76;
+    --c-selected: 232 132 98;
+    --c-selected-deep: 210 108 76;
+    --c-text-primary: 242 232 220;
+    --c-text-secondary: 190 170 152;
+    --c-text-muted: 134 118 104;
+    --c-success: 150 196 130;
+    --c-danger: 240 122 146;
+    --c-warning: 230 180 90;
+    --c-overlay: 255 240 225;
+    --c-outline: 82 69 60;
+    --glass-rgb: 36 29 25;
+    --glass-a: 1;
+    --glass-a-hover: 1;
+    --app-bg-veil: 28 22 19;
+    --app-bg-veil-a: 0.55;
+  }
+}
+:root[data-theme="dark"] .dir-barro {
+  --c-bg-primary: 28 22 19;
+  --c-bg-surface: 36 29 25;
+  --c-bg-elevated: 47 39 34;
+  --c-border-subtle: 58 48 42;
+  --c-border: 82 69 60;
+  --c-accent: 232 132 98;
+  --c-accent-hover: 210 108 76;
+  --c-selected: 232 132 98;
+  --c-selected-deep: 210 108 76;
+  --c-text-primary: 242 232 220;
+  --c-text-secondary: 190 170 152;
+  --c-text-muted: 134 118 104;
+  --c-success: 150 196 130;
+  --c-danger: 240 122 146;
+  --c-warning: 230 180 90;
+  --c-overlay: 255 240 225;
+  --c-outline: 82 69 60;
+  --glass-rgb: 36 29 25;
+  --glass-a: 1;
+  --glass-a-hover: 1;
+  --app-bg-veil: 28 22 19;
+  --app-bg-veil-a: 0.55;
+}
+
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="top-t">
+      <p class="kicker">NOME · cockpit de agentes · proposta de identidade</p>
+      <h1>Direções visuais</h1>
+      <p class="lead">Três caminhos bem diferentes para sair do visual pixel-art laranja. Todos usam exatamente as variáveis que o app já lê (<code>--c-*</code>, <code>--glass-*</code>, <code>--pixel-*</code>), então trocar é só substituir o bloco de tokens.</p>
+    </div>
+    <div class="theme" role="group" aria-label="Tema">
+      <button data-t="auto" aria-pressed="true">Sistema</button><button data-t="light" aria-pressed="false">Claro</button><button data-t="dark" aria-pressed="false">Escuro</button>
+    </div>
+  </header>
+  <div class="cmps" role="tablist" aria-label="Direções"><button class="cmp dir-grafite" role="tab" id="tab-grafite" aria-controls="dir-grafite" aria-selected="true" data-dir="grafite"><span class="cmp-n">Grafite</span><span class="cmp-t">Sóbria · editorial</span><span class="cmp-dots"><i style="background:rgb(var(--c-bg-primary))"></i><i style="background:rgb(var(--c-bg-surface))"></i><i style="background:rgb(var(--c-text-primary))"></i><i style="background:rgb(var(--c-accent))"></i><i style="background:rgb(var(--c-success))"></i><i style="background:rgb(var(--c-warning))"></i></span><span class="cmp-a">Aa <span>terminal ✓</span></span></button><button class="cmp dir-sinal" role="tab" id="tab-sinal" aria-controls="dir-sinal" aria-selected="false" data-dir="sinal"><span class="cmp-n">Sinal</span><span class="cmp-t">Técnica · instrumento</span><span class="cmp-dots"><i style="background:rgb(var(--c-bg-primary))"></i><i style="background:rgb(var(--c-bg-surface))"></i><i style="background:rgb(var(--c-text-primary))"></i><i style="background:rgb(var(--c-accent))"></i><i style="background:rgb(var(--c-success))"></i><i style="background:rgb(var(--c-warning))"></i></span><span class="cmp-a">Aa <span>terminal ✓</span></span></button><button class="cmp dir-barro" role="tab" id="tab-barro" aria-controls="dir-barro" aria-selected="false" data-dir="barro"><span class="cmp-n">Barro</span><span class="cmp-t">Quente · humana</span><span class="cmp-dots"><i style="background:rgb(var(--c-bg-primary))"></i><i style="background:rgb(var(--c-bg-surface))"></i><i style="background:rgb(var(--c-text-primary))"></i><i style="background:rgb(var(--c-accent))"></i><i style="background:rgb(var(--c-success))"></i><i style="background:rgb(var(--c-warning))"></i></span><span class="cmp-a">Aa <span>terminal ✓</span></span></button></div>
+  
+<section class="dir dir-grafite" id="dir-grafite" role="tabpanel" aria-labelledby="tab-grafite">
+  <div class="dir-head">
+    <div>
+      <p class="kicker">Direção 1 · Sóbria · editorial</p>
+      <h2>Grafite</h2>
+      <p class="frase">Papel e tinta. Neutros de grafite, um único azul-tinta de destaque e serifa nos títulos. Some da frente do trabalho; parece ferramenta de quem escreve.</p>
+    </div>
+  </div>
+  <div class="stage mk">
+<div class="win" role="img" aria-label="Mockup da janela principal na direção Grafite">
+  <header class="tb">
+    <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand"><span class="mark">N</span><span>NOME</span></span>
+    <span class="crumbs"><span>Pessoal</span><span class="sep">›</span><span class="cur">medza-api</span></span>
+    
+    <span class="tb-right">
+      <span class="ico" title="Layout"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M8 3v10"/></svg></span>
+      <span class="ico hide-s" title="Grade"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M8 3v10M2 8h12"/></svg></span>
+      <span class="ico bell" title="Notificações"><svg viewBox="0 0 16 16"><path d="M4 11V7a4 4 0 0 1 8 0v4l1 1.5H3z"/><path d="M6.5 14h3"/></svg><i></i></span>
+    </span>
+  </header>
+  <div class="layout">
+    <aside class="side"><div class="lbl">Pessoal</div><div class="plist"><div class="proj on"><span class="pi" aria-hidden="true"></span><span class="pn">medza-api</span><span class="n"><i class="dot run"></i><i class="dot wait"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">omni-agents</span><span class="n"><i class="dot done"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">site-institucional</span><span class="n"></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">infra-scripts</span><span class="n"><i class="dot err"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">notas</span><span class="n"></span></div></div><div class="side-foot"><span class="dot run"></span>2 <span class="dot wait"></span>1 <span class="dot done"></span>1 <span class="dot err"></span>1</div></aside>
+    <main class="main">
+      <nav class="tabs"><div class="tab on" role="presentation"><span class="av">CC</span><span class="dot run" aria-hidden="true"></span><span class="tt"><b>Claude Code</b> <span class="sub">· auth</span></span><span class="st run">rodando</span></div><div class="tab" role="presentation"><span class="av">CX</span><span class="dot wait" aria-hidden="true"></span><span class="tt"><b>Codex</b> <span class="sub">· testes e2e</span></span><span class="st wait">aguardando</span></div><div class="tab" role="presentation"><span class="av">AG</span><span class="dot done" aria-hidden="true"></span><span class="tt"><b>Antigravity</b> <span class="sub">· landing</span></span><span class="st done">concluído</span></div><div class="tab" role="presentation"><span class="av">CC</span><span class="dot err" aria-hidden="true"></span><span class="tt"><b>Claude Code</b> <span class="sub">· revisão PR</span></span><span class="st err">erro</span></div><div class="tab add" aria-label="Novo agente">+</div></nav>
+      <div class="pane-h">
+        <span class="av big">CC</span>
+        <span class="ph-t"><b>Claude Code</b><span class="ph-s">auth · ~/code/medza-api</span></span>
+        <span class="badge model"><span class="k">modelo</span> <b>opus</b></span>
+        <span class="badge"><span class="k">modo</span> plano</span>
+        <span class="badge hide-s"><span class="k">contexto</span> 41%</span>
+      </div>
+      <pre class="term"><span class="m">~/code/medza-api</span> <span class="a">❯</span> claude
+<span class="m">╭─</span> <span class="b">NOME</span> <span class="m">· sessão 3 · plano ativo</span>
+<span class="s">&gt;</span> refatore o middleware de auth para usar o novo client de sessão
+
+<span class="a">●</span> <span class="b">Read</span> <span class="m">src/auth/middleware.ts (142 linhas)</span>
+<span class="a">●</span> <span class="b">Edit</span> <span class="m">src/auth/middleware.ts</span>
+<span class="del">  38 - const session = await legacy.get(req.headers.cookie)</span>
+<span class="add">  38 + const session = await sessions.resolve(req)</span>
+<span class="a">●</span> <span class="b">Bash</span> <span class="m">pnpm test auth</span>
+  <span class="g">✓</span> resolve sessão válida <span class="m">(12 ms)</span>
+  <span class="g">✓</span> rejeita token expirado <span class="m">(4 ms)</span>
+  <span class="r">✗</span> renova sessão perto do fim
+    <span class="r">esperado 200, recebido 401</span>
+<span class="y">▲</span> <span class="y">1 teste falhou</span> — investigando <span class="c">refresh()</span>
+<span class="a spin">✻</span> <span class="s">Pensando…</span> <span class="m">(esc para interromper)</span></pre>
+      <div class="input"><span class="a">›</span><span class="ph">Responder ao agente…</span><kbd>⌘↵</kbd></div>
+    </main>
+    <section class="usage"><div class="lbl">Uso das contas</div><div class="card"><div class="ch"><span class="av">CC</span><b>Claude</b><span class="acct">pessoal</span></div><div class="meter"><div class="mrow"><span class="ml">5 horas</span><span class="mv">62%</span></div><div class="bar" role="img" aria-label="5 horas: 62% consumido"><i style="width:62%"></i></div><div class="mr">reseta às 16:40</div></div><div class="meter"><div class="mrow"><span class="ml">Semana</span><span class="mv">34%</span></div><div class="bar" role="img" aria-label="Semana: 34% consumido"><i style="width:34%"></i></div><div class="mr">reseta seg 09:00</div></div></div><div class="card"><div class="ch"><span class="av">CX</span><b>Codex</b><span class="acct">trabalho</span></div><div class="meter"><div class="mrow"><span class="ml">5 horas</span><span class="mv">18%</span></div><div class="bar" role="img" aria-label="5 horas: 18% consumido"><i style="width:18%"></i></div><div class="mr">reseta às 18:05</div></div><div class="meter"><div class="mrow"><span class="ml">Semana</span><span class="mv">47%</span></div><div class="bar" role="img" aria-label="Semana: 47% consumido"><i style="width:47%"></i></div><div class="mr">reseta qui 11:00</div></div></div><div class="card"><div class="ch"><span class="av">AG</span><b>Antigravity</b><span class="acct">pessoal</span></div><div class="meter"><div class="mrow"><span class="ml">Cota</span><span class="mv warn">86%</span></div><div class="bar warn" role="img" aria-label="Cota: 86% consumido"><i style="width:86%"></i></div><div class="mr">reseta amanhã 00:00</div></div></div></section>
+  </div>
+  <footer class="sbar"><span><i class="dot run"></i>1 rodando</span><span><i class="dot wait"></i>1 esperando você</span><span class="hide-s"><i class="dot err"></i>1 com erro</span><span class="sb-r">main · 3 alterações</span></footer>
+</div></div>
+  <div class="specs">
+    <div class="spec type">
+      <h3>Tipografia</h3>
+      <p class="t-d">Agentes em paralelo</p>
+      <p class="t-u">Interface: abas, listas e configurações em português.</p>
+      <p class="t-m">pnpm test auth  ✓ 12 ms</p>
+      <p class="note">Títulos em Newsreader (serifa), interface em SF Pro (fonte do sistema), terminal em JetBrains Mono.</p>
+    </div>
+    <div class="spec">
+      <h3>Forma e densidade</h3>
+      <div class="radii"><span style="border-radius:4px">controle<br>4px</span><span style="border-radius:6px">painel<br>6px</span><span style="border-radius:10px">janela<br>10px</span></div>
+      <p class="note">6px nos painéis, 4px em controles, 999px só em selos.</p>
+      <p class="note">Confortável: barra de título 38px, linha de lista 30px, texto 13px.</p>
+    </div>
+    <div class="spec wide">
+      <h3>Paleta <span class="muted">(chip no tema atual · claro / escuro)</span></h3>
+      <div class="sws"><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-primary))"></span><code>--c-bg-primary</code><span class="hx l">#F6F5F2</span><span class="hx d">#111113</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-surface))"></span><code>--c-bg-surface</code><span class="hx l">#FFFFFF</span><span class="hx d">#18181B</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-elevated))"></span><code>--c-bg-elevated</code><span class="hx l">#EEEDE9</span><span class="hx d">#202024</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-border-subtle))"></span><code>--c-border-subtle</code><span class="hx l">#E4E2DC</span><span class="hx d">#28282D</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-border))"></span><code>--c-border</code><span class="hx l">#D0CDC5</span><span class="hx d">#3C3C42</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-accent))"></span><code>--c-accent</code><span class="hx l">#2546D6</span><span class="hx d">#849AFF</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-accent-hover))"></span><code>--c-accent-hover</code><span class="hx l">#1C34A8</span><span class="hx d">#687EF0</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-primary))"></span><code>--c-text-primary</code><span class="hx l">#17171A</span><span class="hx d">#ECEBE8</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-secondary))"></span><code>--c-text-secondary</code><span class="hx l">#57565C</span><span class="hx d">#A2A1A7</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-muted))"></span><code>--c-text-muted</code><span class="hx l">#85838A</span><span class="hx d">#706F76</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-success))"></span><code>--c-success</code><span class="hx l">#15803D</span><span class="hx d">#56CC80</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-warning))"></span><code>--c-warning</code><span class="hx l">#A16207</span><span class="hx d">#E4AC40</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-danger))"></span><code>--c-danger</code><span class="hx l">#BE2A1E</span><span class="hx d">#F0685C</span></div></div>
+    </div>
+    <div class="spec wide">
+      <h3>No app</h3>
+      <p class="note"><code>tokens-grafite.css</code> substitui os blocos de variáveis do topo de <code>src/index.css</code> (mesmos nomes). Em <code>tailwind.config.ts</code>:</p>
+      <pre class="code">fontFamily: {
+  sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Helvetica Neue', 'sans-serif'],
+  serif: ['Newsreader', 'New York', 'Georgia', 'serif'],
+  mono: ['JetBrains Mono', 'SF Mono', 'Menlo', 'monospace'],
+},
+borderRadius: { DEFAULT: '6px', sm: '4px', md: '6px', lg: '10px', xl: '14px' },</pre>
+      <p class="note">A paleta precisa entrar em <code>src/lib/palettes.ts</code> como padrão: hoje o <code>useSettings</code> sobrescreve <code>--c-accent</code>/<code>--c-selected</code> com o laranja.</p>
+    </div>
+  </div>
+</section>
+<section class="dir dir-sinal" id="dir-sinal" role="tabpanel" aria-labelledby="tab-sinal" hidden>
+  <div class="dir-head">
+    <div>
+      <p class="kicker">Direção 2 · Técnica · instrumento</p>
+      <h2>Sinal</h2>
+      <p class="frase">Painel de instrumento. Fundo quase preto, âmbar de fósforo, tudo mono, rótulos em caixa-alta e barras segmentadas. Denso, legível de longe, feito para vigiar vários agentes ao mesmo tempo.</p>
+    </div>
+  </div>
+  <div class="stage mk">
+<div class="win" role="img" aria-label="Mockup da janela principal na direção Sinal">
+  <header class="tb">
+    <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand"><span class="mark">[N]</span><span>NOME</span></span>
+    <span class="crumbs"><span>PESSOAL</span><span class="sep">›</span><span class="cur">medza-api</span></span>
+    <span class="readout"><b>AG</b> 4 <b>RUN</b> 1 <b>WAIT</b> 1 <b>ERR</b> 1</span>
+    <span class="tb-right">
+      <span class="ico" title="Layout"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M8 3v10"/></svg></span>
+      <span class="ico hide-s" title="Grade"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M8 3v10M2 8h12"/></svg></span>
+      <span class="ico bell" title="Notificações"><svg viewBox="0 0 16 16"><path d="M4 11V7a4 4 0 0 1 8 0v4l1 1.5H3z"/><path d="M6.5 14h3"/></svg><i></i></span>
+    </span>
+  </header>
+  <div class="layout">
+    <aside class="side"><div class="lbl">PESSOAL</div><div class="plist"><div class="proj on"><span class="pi" aria-hidden="true"></span><span class="pn">medza-api</span><span class="n"><i class="dot run"></i><i class="dot wait"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">omni-agents</span><span class="n"><i class="dot done"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">site-institucional</span><span class="n"></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">infra-scripts</span><span class="n"><i class="dot err"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">notas</span><span class="n"></span></div></div><div class="side-foot"><span class="dot run"></span>2 <span class="dot wait"></span>1 <span class="dot done"></span>1 <span class="dot err"></span>1</div></aside>
+    <main class="main">
+      <nav class="tabs"><div class="tab on" role="presentation"><span class="av">CC</span><span class="dot run" aria-hidden="true"></span><span class="tt"><b>Claude Code</b> <span class="sub">· auth</span></span><span class="st run">RUN</span></div><div class="tab" role="presentation"><span class="av">CX</span><span class="dot wait" aria-hidden="true"></span><span class="tt"><b>Codex</b> <span class="sub">· testes e2e</span></span><span class="st wait">WAIT</span></div><div class="tab" role="presentation"><span class="av">AG</span><span class="dot done" aria-hidden="true"></span><span class="tt"><b>Antigravity</b> <span class="sub">· landing</span></span><span class="st done">OK</span></div><div class="tab" role="presentation"><span class="av">CC</span><span class="dot err" aria-hidden="true"></span><span class="tt"><b>Claude Code</b> <span class="sub">· revisão PR</span></span><span class="st err">ERR</span></div><div class="tab add" aria-label="Novo agente">+</div></nav>
+      <div class="pane-h">
+        <span class="av big">CC</span>
+        <span class="ph-t"><b>Claude Code</b><span class="ph-s">auth · ~/code/medza-api</span></span>
+        <span class="badge model"><span class="k">modelo</span> <b>opus</b></span>
+        <span class="badge"><span class="k">modo</span> plano</span>
+        <span class="badge hide-s"><span class="k">contexto</span> 41%</span>
+      </div>
+      <pre class="term"><span class="m">~/code/medza-api</span> <span class="a">❯</span> claude
+<span class="m">╭─</span> <span class="b">NOME</span> <span class="m">· sessão 3 · plano ativo</span>
+<span class="s">&gt;</span> refatore o middleware de auth para usar o novo client de sessão
+
+<span class="a">●</span> <span class="b">Read</span> <span class="m">src/auth/middleware.ts (142 linhas)</span>
+<span class="a">●</span> <span class="b">Edit</span> <span class="m">src/auth/middleware.ts</span>
+<span class="del">  38 - const session = await legacy.get(req.headers.cookie)</span>
+<span class="add">  38 + const session = await sessions.resolve(req)</span>
+<span class="a">●</span> <span class="b">Bash</span> <span class="m">pnpm test auth</span>
+  <span class="g">✓</span> resolve sessão válida <span class="m">(12 ms)</span>
+  <span class="g">✓</span> rejeita token expirado <span class="m">(4 ms)</span>
+  <span class="r">✗</span> renova sessão perto do fim
+    <span class="r">esperado 200, recebido 401</span>
+<span class="y">▲</span> <span class="y">1 teste falhou</span> — investigando <span class="c">refresh()</span>
+<span class="a spin">✻</span> <span class="s">Pensando…</span> <span class="m">(esc para interromper)</span></pre>
+      <div class="input"><span class="a">›</span><span class="ph">Responder ao agente…</span><kbd>⌘↵</kbd></div>
+    </main>
+    <section class="usage"><div class="lbl">USO / CONTAS</div><div class="card"><div class="ch"><span class="av">CC</span><b>Claude</b><span class="acct">pessoal</span></div><div class="meter"><div class="mrow"><span class="ml">5 horas</span><span class="mv">62%</span></div><div class="bar" role="img" aria-label="5 horas: 62% consumido"><i style="width:62%"></i></div><div class="mr">reseta às 16:40</div></div><div class="meter"><div class="mrow"><span class="ml">Semana</span><span class="mv">34%</span></div><div class="bar" role="img" aria-label="Semana: 34% consumido"><i style="width:34%"></i></div><div class="mr">reseta seg 09:00</div></div></div><div class="card"><div class="ch"><span class="av">CX</span><b>Codex</b><span class="acct">trabalho</span></div><div class="meter"><div class="mrow"><span class="ml">5 horas</span><span class="mv">18%</span></div><div class="bar" role="img" aria-label="5 horas: 18% consumido"><i style="width:18%"></i></div><div class="mr">reseta às 18:05</div></div><div class="meter"><div class="mrow"><span class="ml">Semana</span><span class="mv">47%</span></div><div class="bar" role="img" aria-label="Semana: 47% consumido"><i style="width:47%"></i></div><div class="mr">reseta qui 11:00</div></div></div><div class="card"><div class="ch"><span class="av">AG</span><b>Antigravity</b><span class="acct">pessoal</span></div><div class="meter"><div class="mrow"><span class="ml">Cota</span><span class="mv warn">86%</span></div><div class="bar warn" role="img" aria-label="Cota: 86% consumido"><i style="width:86%"></i></div><div class="mr">reseta amanhã 00:00</div></div></div></section>
+  </div>
+  <footer class="sbar"><span><i class="dot run"></i>1 rodando</span><span><i class="dot wait"></i>1 esperando você</span><span class="hide-s"><i class="dot err"></i>1 com erro</span><span class="sb-r">main · 3 alterações</span></footer>
+</div></div>
+  <div class="specs">
+    <div class="spec type">
+      <h3>Tipografia</h3>
+      <p class="t-d">Agentes em paralelo</p>
+      <p class="t-u">Interface: abas, listas e configurações em português.</p>
+      <p class="t-m">pnpm test auth  ✓ 12 ms</p>
+      <p class="note">Tudo em IBM Plex Mono; rótulos e números grandes em IBM Plex Sans Condensed, caixa-alta com espaçamento.</p>
+    </div>
+    <div class="spec">
+      <h3>Forma e densidade</h3>
+      <div class="radii"><span style="border-radius:2px">controle<br>2px</span><span style="border-radius:2px">painel<br>2px</span><span style="border-radius:4px">janela<br>4px</span></div>
+      <p class="note">2px em tudo (quase reto). Sem sombras; profundidade por linha fina.</p>
+      <p class="note">Compacta: barra de título 30px, linha de lista 24px, texto 12px.</p>
+    </div>
+    <div class="spec wide">
+      <h3>Paleta <span class="muted">(chip no tema atual · claro / escuro)</span></h3>
+      <div class="sws"><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-primary))"></span><code>--c-bg-primary</code><span class="hx l">#ECECE6</span><span class="hx d">#0B0C0A</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-surface))"></span><code>--c-bg-surface</code><span class="hx l">#F6F6F1</span><span class="hx d">#111210</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-elevated))"></span><code>--c-bg-elevated</code><span class="hx l">#E2E2DB</span><span class="hx d">#191B17</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-border-subtle))"></span><code>--c-border-subtle</code><span class="hx l">#D4D4CC</span><span class="hx d">#252822</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-border))"></span><code>--c-border</code><span class="hx l">#B0B0A6</span><span class="hx d">#3A3E34</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-accent))"></span><code>--c-accent</code><span class="hx l">#965C00</span><span class="hx d">#FFB000</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-accent-hover))"></span><code>--c-accent-hover</code><span class="hx l">#784800</span><span class="hx d">#D69100</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-primary))"></span><code>--c-text-primary</code><span class="hx l">#141612</span><span class="hx d">#DEE2D2</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-secondary))"></span><code>--c-text-secondary</code><span class="hx l">#4A4E44</span><span class="hx d">#909884</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-muted))"></span><code>--c-text-muted</code><span class="hx l">#74786C</span><span class="hx d">#5E6456</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-success))"></span><code>--c-success</code><span class="hx l">#1C803A</span><span class="hx d">#62D678</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-warning))"></span><code>--c-warning</code><span class="hx l">#BA4E08</span><span class="hx d">#FF8030</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-danger))"></span><code>--c-danger</code><span class="hx l">#C42626</span><span class="hx d">#FF544C</span></div></div>
+    </div>
+    <div class="spec wide">
+      <h3>No app</h3>
+      <p class="note"><code>tokens-sinal.css</code> substitui os blocos de variáveis do topo de <code>src/index.css</code> (mesmos nomes). Em <code>tailwind.config.ts</code>:</p>
+      <pre class="code">fontFamily: {
+  sans: ['IBM Plex Mono', 'SF Mono', 'Menlo', 'monospace'],
+  display: ['IBM Plex Sans Condensed', 'SF Pro Display', 'sans-serif'],
+  mono: ['IBM Plex Mono', 'SF Mono', 'Menlo', 'monospace'],
+},
+borderRadius: { DEFAULT: '2px', sm: '1px', md: '2px', lg: '3px', xl: '4px' },</pre>
+      <p class="note">A paleta precisa entrar em <code>src/lib/palettes.ts</code> como padrão: hoje o <code>useSettings</code> sobrescreve <code>--c-accent</code>/<code>--c-selected</code> com o laranja.</p>
+    </div>
+  </div>
+</section>
+<section class="dir dir-barro" id="dir-barro" role="tabpanel" aria-labelledby="tab-barro" hidden>
+  <div class="dir-head">
+    <div>
+      <p class="kicker">Direção 3 · Quente · humana</p>
+      <h2>Barro</h2>
+      <p class="frase">Ateliê. Creme e terracota, cantos macios, verde-sálvia para o que deu certo. Cada agente tem rosto (iniciais), os estados falam como gente: “esperando você”.</p>
+    </div>
+  </div>
+  <div class="stage mk">
+<div class="win" role="img" aria-label="Mockup da janela principal na direção Barro">
+  <header class="tb">
+    <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand"><span class="mark">n</span><span>NOME</span></span>
+    <span class="crumbs"><span>Pessoal</span><span class="sep">›</span><span class="cur">medza-api</span></span>
+    
+    <span class="tb-right">
+      <span class="ico" title="Layout"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M8 3v10"/></svg></span>
+      <span class="ico hide-s" title="Grade"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M8 3v10M2 8h12"/></svg></span>
+      <span class="ico bell" title="Notificações"><svg viewBox="0 0 16 16"><path d="M4 11V7a4 4 0 0 1 8 0v4l1 1.5H3z"/><path d="M6.5 14h3"/></svg><i></i></span>
+    </span>
+  </header>
+  <div class="layout">
+    <aside class="side"><div class="lbl">Pessoal</div><div class="plist"><div class="proj on"><span class="pi" aria-hidden="true"></span><span class="pn">medza-api</span><span class="n"><i class="dot run"></i><i class="dot wait"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">omni-agents</span><span class="n"><i class="dot done"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">site-institucional</span><span class="n"></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">infra-scripts</span><span class="n"><i class="dot err"></i></span></div><div class="proj"><span class="pi" aria-hidden="true"></span><span class="pn">notas</span><span class="n"></span></div></div><div class="side-foot"><span class="dot run"></span>2 <span class="dot wait"></span>1 <span class="dot done"></span>1 <span class="dot err"></span>1</div></aside>
+    <main class="main">
+      <nav class="tabs"><div class="tab on" role="presentation"><span class="av">CC</span><span class="dot run" aria-hidden="true"></span><span class="tt"><b>Claude Code</b> <span class="sub">· auth</span></span><span class="st run">trabalhando</span></div><div class="tab" role="presentation"><span class="av">CX</span><span class="dot wait" aria-hidden="true"></span><span class="tt"><b>Codex</b> <span class="sub">· testes e2e</span></span><span class="st wait">esperando você</span></div><div class="tab" role="presentation"><span class="av">AG</span><span class="dot done" aria-hidden="true"></span><span class="tt"><b>Antigravity</b> <span class="sub">· landing</span></span><span class="st done">pronto</span></div><div class="tab" role="presentation"><span class="av">CC</span><span class="dot err" aria-hidden="true"></span><span class="tt"><b>Claude Code</b> <span class="sub">· revisão PR</span></span><span class="st err">travou</span></div><div class="tab add" aria-label="Novo agente">+</div></nav>
+      <div class="pane-h">
+        <span class="av big">CC</span>
+        <span class="ph-t"><b>Claude Code</b><span class="ph-s">auth · ~/code/medza-api</span></span>
+        <span class="badge model"><span class="k">modelo</span> <b>opus</b></span>
+        <span class="badge"><span class="k">modo</span> plano</span>
+        <span class="badge hide-s"><span class="k">contexto</span> 41%</span>
+      </div>
+      <pre class="term"><span class="m">~/code/medza-api</span> <span class="a">❯</span> claude
+<span class="m">╭─</span> <span class="b">NOME</span> <span class="m">· sessão 3 · plano ativo</span>
+<span class="s">&gt;</span> refatore o middleware de auth para usar o novo client de sessão
+
+<span class="a">●</span> <span class="b">Read</span> <span class="m">src/auth/middleware.ts (142 linhas)</span>
+<span class="a">●</span> <span class="b">Edit</span> <span class="m">src/auth/middleware.ts</span>
+<span class="del">  38 - const session = await legacy.get(req.headers.cookie)</span>
+<span class="add">  38 + const session = await sessions.resolve(req)</span>
+<span class="a">●</span> <span class="b">Bash</span> <span class="m">pnpm test auth</span>
+  <span class="g">✓</span> resolve sessão válida <span class="m">(12 ms)</span>
+  <span class="g">✓</span> rejeita token expirado <span class="m">(4 ms)</span>
+  <span class="r">✗</span> renova sessão perto do fim
+    <span class="r">esperado 200, recebido 401</span>
+<span class="y">▲</span> <span class="y">1 teste falhou</span> — investigando <span class="c">refresh()</span>
+<span class="a spin">✻</span> <span class="s">Pensando…</span> <span class="m">(esc para interromper)</span></pre>
+      <div class="input"><span class="a">›</span><span class="ph">Responder ao agente…</span><kbd>⌘↵</kbd></div>
+    </main>
+    <section class="usage"><div class="lbl">Como estão as contas</div><div class="card"><div class="ch"><span class="av">CC</span><b>Claude</b><span class="acct">pessoal</span></div><div class="meter"><div class="mrow"><span class="ml">5 horas</span><span class="mv">62%</span></div><div class="bar" role="img" aria-label="5 horas: 62% consumido"><i style="width:62%"></i></div><div class="mr">reseta às 16:40</div></div><div class="meter"><div class="mrow"><span class="ml">Semana</span><span class="mv">34%</span></div><div class="bar" role="img" aria-label="Semana: 34% consumido"><i style="width:34%"></i></div><div class="mr">reseta seg 09:00</div></div></div><div class="card"><div class="ch"><span class="av">CX</span><b>Codex</b><span class="acct">trabalho</span></div><div class="meter"><div class="mrow"><span class="ml">5 horas</span><span class="mv">18%</span></div><div class="bar" role="img" aria-label="5 horas: 18% consumido"><i style="width:18%"></i></div><div class="mr">reseta às 18:05</div></div><div class="meter"><div class="mrow"><span class="ml">Semana</span><span class="mv">47%</span></div><div class="bar" role="img" aria-label="Semana: 47% consumido"><i style="width:47%"></i></div><div class="mr">reseta qui 11:00</div></div></div><div class="card"><div class="ch"><span class="av">AG</span><b>Antigravity</b><span class="acct">pessoal</span></div><div class="meter"><div class="mrow"><span class="ml">Cota</span><span class="mv warn">86%</span></div><div class="bar warn" role="img" aria-label="Cota: 86% consumido"><i style="width:86%"></i></div><div class="mr">reseta amanhã 00:00</div></div></div></section>
+  </div>
+  <footer class="sbar"><span><i class="dot run"></i>1 rodando</span><span><i class="dot wait"></i>1 esperando você</span><span class="hide-s"><i class="dot err"></i>1 com erro</span><span class="sb-r">main · 3 alterações</span></footer>
+</div></div>
+  <div class="specs">
+    <div class="spec type">
+      <h3>Tipografia</h3>
+      <p class="t-d">Agentes em paralelo</p>
+      <p class="t-u">Interface: abas, listas e configurações em português.</p>
+      <p class="t-m">pnpm test auth  ✓ 12 ms</p>
+      <p class="note">Títulos em Fraunces (serifa suave), interface em DM Sans, terminal em DM Mono.</p>
+    </div>
+    <div class="spec">
+      <h3>Forma e densidade</h3>
+      <div class="radii"><span style="border-radius:8px">controle<br>8px</span><span style="border-radius:12px">painel<br>12px</span><span style="border-radius:16px">janela<br>16px</span></div>
+      <p class="note">12px nos painéis, 8px em controles, abas em pílula.</p>
+      <p class="note">Arejada: barra de título 42px, linha de lista 34px, texto 13.5px.</p>
+    </div>
+    <div class="spec wide">
+      <h3>Paleta <span class="muted">(chip no tema atual · claro / escuro)</span></h3>
+      <div class="sws"><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-primary))"></span><code>--c-bg-primary</code><span class="hx l">#F7F1E9</span><span class="hx d">#1C1613</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-surface))"></span><code>--c-bg-surface</code><span class="hx l">#FDFAF5</span><span class="hx d">#241D19</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-bg-elevated))"></span><code>--c-bg-elevated</code><span class="hx l">#F0E7DC</span><span class="hx d">#2F2722</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-border-subtle))"></span><code>--c-border-subtle</code><span class="hx l">#E9DDCE</span><span class="hx d">#3A302A</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-border))"></span><code>--c-border</code><span class="hx l">#D6C5B1</span><span class="hx d">#52453C</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-accent))"></span><code>--c-accent</code><span class="hx l">#B84A2E</span><span class="hx d">#E88462</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-accent-hover))"></span><code>--c-accent-hover</code><span class="hx l">#963A22</span><span class="hx d">#D26C4C</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-primary))"></span><code>--c-text-primary</code><span class="hx l">#2B1F18</span><span class="hx d">#F2E8DC</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-secondary))"></span><code>--c-text-secondary</code><span class="hx l">#705C4E</span><span class="hx d">#BEAA98</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-text-muted))"></span><code>--c-text-muted</code><span class="hx l">#968272</span><span class="hx d">#867668</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-success))"></span><code>--c-success</code><span class="hx l">#467842</span><span class="hx d">#96C482</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-warning))"></span><code>--c-warning</code><span class="hx l">#A86E12</span><span class="hx d">#E6B45A</span></div><div class="sw"><span class="chip" style="background:rgb(var(--c-danger))"></span><code>--c-danger</code><span class="hx l">#A02848</span><span class="hx d">#F07A92</span></div></div>
+    </div>
+    <div class="spec wide">
+      <h3>No app</h3>
+      <p class="note"><code>tokens-barro.css</code> substitui os blocos de variáveis do topo de <code>src/index.css</code> (mesmos nomes). Em <code>tailwind.config.ts</code>:</p>
+      <pre class="code">fontFamily: {
+  sans: ['DM Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+  serif: ['Fraunces', 'New York', 'Georgia', 'serif'],
+  mono: ['DM Mono', 'SF Mono', 'Menlo', 'monospace'],
+},
+borderRadius: { DEFAULT: '8px', sm: '6px', md: '8px', lg: '12px', xl: '16px', '2xl': '20px' },</pre>
+      <p class="note">A paleta precisa entrar em <code>src/lib/palettes.ts</code> como padrão: hoje o <code>useSettings</code> sobrescreve <code>--c-accent</code>/<code>--c-selected</code> com o laranja.</p>
+    </div>
+  </div>
+</section>
+  <footer class="foot">Mockups estáticos. Nomes de modelo e percentuais são ilustrativos. Fontes via Google Fonts só nesta página; no app, empacotar localmente.</footer>
+</div>
+<script>
+(function () {
+  var root = document.documentElement;
+  function store(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  var themeBtns = document.querySelectorAll('.theme button');
+  function setTheme(t) {
+    if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
+    themeBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.t === (t || 'auto'))); });
+  }
+  themeBtns.forEach(function (b) { b.addEventListener('click', function () { setTheme(b.dataset.t); store('dv-theme', b.dataset.t === 'auto' ? null : b.dataset.t); }); });
+  setTheme(load('dv-theme') || 'auto');
+
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.cmp'));
+  function show(id, focus) {
+    tabs.forEach(function (t) {
+      var on = t.dataset.dir === id;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById('dir-' + t.dataset.dir).hidden = !on;
+      if (on && focus) t.focus();
+    });
+    store('dv-dir', id);
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { show(t.dataset.dir); });
+    t.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      show(tabs[(i + d + tabs.length) % tabs.length].dataset.dir, true);
+    });
+  });
+  var h = (location.hash || '').slice(1).split(':');
+  if (h[1] === 'dark' || h[1] === 'light') setTheme(h[1]);
+  var saved = h[0] || load('dv-dir');
+  show(tabs.some(function (t) { return t.dataset.dir === saved; }) ? saved : tabs[0].dataset.dir);
+})();
+
+</script>
+</body>
+</html>

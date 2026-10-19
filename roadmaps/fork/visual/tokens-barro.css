@@ -1,0 +1,112 @@
+/*
+ * NOME — direção "Barro" (Quente · humana)
+ * Drop-in: substitui os blocos `:root, :root[data-theme="escuro"]`, `:root[data-theme="claro"]`
+ * e o bloco de relevo (--pixel-border/--pixel-shadow/--glass-radius) no topo de src/index.css,
+ * dentro de `@layer base`. Mesmos nomes de variável, formato "R G B" (Tailwind usa
+ * rgb(var(--x) / <alpha-value>)).
+ *
+ * ATENÇÃO
+ * - --c-accent, --c-accent-hover, --c-selected e --c-selected-deep são sobrescritos no <html>
+ *   pelo useSettings a partir de src/lib/palettes.ts. Para a direção valer, adicionar a paleta
+ *   "barro" lá (base/deep/claro abaixo) e torná-la o padrão — senão o laranja volta.
+ *     base  #E88462  deep #D26C4C
+ *     claro #B84A2E  deep #963A22
+ * - --c-outline deixa de ser o traço quase-preto do pixel-art e vira a cor da borda: com
+ *   --pixel-shadow 0 os painéis ".glass" ficam com borda fina e sem sombra dura.
+ * - Tipografia: Títulos em Fraunces (serifa suave), interface em DM Sans, terminal em DM Mono.
+ *   O body hoje força 'Cascadia Code' (index.css, regra `body`): trocar por var(--font-ui).
+ *   App Tauri roda offline: empacotar as fontes (woff2 em src/assets/fonts + @font-face),
+ *   não depender do Google Fonts em produção.
+ * - Terminal (TerminalPane.tsx, theme do xterm): foreground hoje é "#e2e2ec" e cursor
+ *   "#f97316" fixos — passar a ler --c-text-primary / --c-accent.
+ * - Raio: 12px nos painéis, 8px em controles, abas em pílula.
+ * - Densidade: Arejada: barra de título 42px, linha de lista 34px, texto 13.5px.
+ */
+
+  /* Tema escuro (padrão). O atributo data-theme é setado por useSettings. */
+  :root,
+  :root[data-theme="escuro"] {
+    --c-bg-primary: 28 22 19;
+    --c-bg-surface: 36 29 25;
+    --c-bg-elevated: 47 39 34;
+    --c-border-subtle: 58 48 42;
+    --c-border: 82 69 60;
+    --c-accent: 232 132 98;
+    --c-accent-hover: 210 108 76;
+    --c-selected: 232 132 98;
+    --c-selected-deep: 210 108 76;
+    --c-text-primary: 242 232 220;
+    --c-text-secondary: 190 170 152;
+    --c-text-muted: 134 118 104;
+    --c-success: 150 196 130;
+    --c-danger: 240 122 146;
+    --c-warning: 230 180 90;
+    --c-overlay: 255 240 225;
+    --c-outline: 82 69 60;
+    --glass-rgb: 36 29 25;
+    --glass-a: 1;
+    --glass-a-hover: 1;
+    --app-bg-veil: 28 22 19;
+    --app-bg-veil-a: 0.55;
+    /* NOVA (opcional): texto sobre o acento. .btn-primary hoje usa #fff fixo, que reprova
+       contraste sobre este acento claro no escuro — trocar por rgb(var(--c-on-accent)). */
+    --c-on-accent: 40 20 12;
+  }
+
+  :root[data-theme="claro"] {
+    --c-bg-primary: 247 241 233;
+    --c-bg-surface: 253 250 245;
+    --c-bg-elevated: 240 231 220;
+    --c-border-subtle: 233 221 206;
+    --c-border: 214 197 177;
+    --c-accent: 184 74 46;
+    --c-accent-hover: 150 58 34;
+    --c-selected: 184 74 46;
+    --c-selected-deep: 150 58 34;
+    --c-text-primary: 43 31 24;
+    --c-text-secondary: 112 92 78;
+    --c-text-muted: 150 130 114;
+    --c-success: 70 120 66;
+    --c-danger: 160 40 72;
+    --c-warning: 168 110 18;
+    --c-overlay: 60 40 20;
+    --c-outline: 214 197 177;
+    --glass-rgb: 253 250 245;
+    --glass-a: 1;
+    --glass-a-hover: 1;
+    --app-bg-veil: 247 241 233;
+    --app-bg-veil-a: 0.7;
+    --c-on-accent: 255 255 255;
+  }
+
+  /* Relevo: a direção não usa painel pixel. Os três níveis do setting "glass" ficam
+     quase iguais de propósito (só a borda engrossa no "forte"). */
+  :root {
+    --pixel-border: 1px;
+    --pixel-shadow: 0px;
+    --glass-radius: 12px;
+
+    --font-ui: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Fraunces', 'New York', Georgia, serif;
+    --font-mono: 'DM Mono', 'SF Mono', Menlo, monospace;
+    --radius-ctl: 8px;
+    --titlebar-h: 42px;
+    --row-h: 34px;
+  }
+  :root[data-glass="sutil"] { --pixel-border: 1px; --pixel-shadow: 0px; }
+  :root[data-glass="forte"] { --pixel-border: 2px; --pixel-shadow: 0px; }
+
+/*
+ * tailwind.config.ts — o que muda em theme.extend:
+ *
+ *   fontFamily: {
+ *     sans: ['DM Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+ *       serif: ['Fraunces', 'New York', 'Georgia', 'serif'],
+ *       mono: ['DM Mono', 'SF Mono', 'Menlo', 'monospace'],
+ *   },
+ *   borderRadius: { DEFAULT: '8px', sm: '6px', md: '8px', lg: '12px', xl: '16px', '2xl': '20px' },
+ *
+ * - Hoje fontFamily.sans é "Segoe UI" (herança Windows) e mono é Cascadia: ambos saem.
+ * - boxShadow.glow pode sair (nenhuma das três direções usa brilho neon).
+ * - Cores ficam como estão: continuam lendo as mesmas variáveis.
+ */

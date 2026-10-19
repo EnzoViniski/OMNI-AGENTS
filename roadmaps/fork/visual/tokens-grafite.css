@@ -1,0 +1,112 @@
+/*
+ * NOME — direção "Grafite" (Sóbria · editorial)
+ * Drop-in: substitui os blocos `:root, :root[data-theme="escuro"]`, `:root[data-theme="claro"]`
+ * e o bloco de relevo (--pixel-border/--pixel-shadow/--glass-radius) no topo de src/index.css,
+ * dentro de `@layer base`. Mesmos nomes de variável, formato "R G B" (Tailwind usa
+ * rgb(var(--x) / <alpha-value>)).
+ *
+ * ATENÇÃO
+ * - --c-accent, --c-accent-hover, --c-selected e --c-selected-deep são sobrescritos no <html>
+ *   pelo useSettings a partir de src/lib/palettes.ts. Para a direção valer, adicionar a paleta
+ *   "grafite" lá (base/deep/claro abaixo) e torná-la o padrão — senão o laranja volta.
+ *     base  #849AFF  deep #687EF0
+ *     claro #2546D6  deep #1C34A8
+ * - --c-outline deixa de ser o traço quase-preto do pixel-art e vira a cor da borda: com
+ *   --pixel-shadow 0 os painéis ".glass" ficam com borda fina e sem sombra dura.
+ * - Tipografia: Títulos em Newsreader (serifa), interface em SF Pro (fonte do sistema), terminal em JetBrains Mono.
+ *   O body hoje força 'Cascadia Code' (index.css, regra `body`): trocar por var(--font-ui).
+ *   App Tauri roda offline: empacotar as fontes (woff2 em src/assets/fonts + @font-face),
+ *   não depender do Google Fonts em produção.
+ * - Terminal (TerminalPane.tsx, theme do xterm): foreground hoje é "#e2e2ec" e cursor
+ *   "#f97316" fixos — passar a ler --c-text-primary / --c-accent.
+ * - Raio: 6px nos painéis, 4px em controles, 999px só em selos.
+ * - Densidade: Confortável: barra de título 38px, linha de lista 30px, texto 13px.
+ */
+
+  /* Tema escuro (padrão). O atributo data-theme é setado por useSettings. */
+  :root,
+  :root[data-theme="escuro"] {
+    --c-bg-primary: 17 17 19;
+    --c-bg-surface: 24 24 27;
+    --c-bg-elevated: 32 32 36;
+    --c-border-subtle: 40 40 45;
+    --c-border: 60 60 66;
+    --c-accent: 132 154 255;
+    --c-accent-hover: 104 126 240;
+    --c-selected: 132 154 255;
+    --c-selected-deep: 104 126 240;
+    --c-text-primary: 236 235 232;
+    --c-text-secondary: 162 161 167;
+    --c-text-muted: 112 111 118;
+    --c-success: 86 204 128;
+    --c-danger: 240 104 92;
+    --c-warning: 228 172 64;
+    --c-overlay: 255 255 255;
+    --c-outline: 60 60 66;
+    --glass-rgb: 24 24 27;
+    --glass-a: 1;
+    --glass-a-hover: 1;
+    --app-bg-veil: 17 17 19;
+    --app-bg-veil-a: 0.6;
+    /* NOVA (opcional): texto sobre o acento. .btn-primary hoje usa #fff fixo, que reprova
+       contraste sobre este acento claro no escuro — trocar por rgb(var(--c-on-accent)). */
+    --c-on-accent: 12 16 40;
+  }
+
+  :root[data-theme="claro"] {
+    --c-bg-primary: 246 245 242;
+    --c-bg-surface: 255 255 255;
+    --c-bg-elevated: 238 237 233;
+    --c-border-subtle: 228 226 220;
+    --c-border: 208 205 197;
+    --c-accent: 37 70 214;
+    --c-accent-hover: 28 52 168;
+    --c-selected: 37 70 214;
+    --c-selected-deep: 28 52 168;
+    --c-text-primary: 23 23 26;
+    --c-text-secondary: 87 86 92;
+    --c-text-muted: 133 131 138;
+    --c-success: 21 128 61;
+    --c-danger: 190 42 30;
+    --c-warning: 161 98 7;
+    --c-overlay: 20 20 30;
+    --c-outline: 208 205 197;
+    --glass-rgb: 255 255 255;
+    --glass-a: 1;
+    --glass-a-hover: 1;
+    --app-bg-veil: 246 245 242;
+    --app-bg-veil-a: 0.72;
+    --c-on-accent: 255 255 255;
+  }
+
+  /* Relevo: a direção não usa painel pixel. Os três níveis do setting "glass" ficam
+     quase iguais de propósito (só a borda engrossa no "forte"). */
+  :root {
+    --pixel-border: 1px;
+    --pixel-shadow: 0px;
+    --glass-radius: 6px;
+
+    --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    --font-display: 'Newsreader', 'New York', Georgia, serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    --radius-ctl: 4px;
+    --titlebar-h: 38px;
+    --row-h: 30px;
+  }
+  :root[data-glass="sutil"] { --pixel-border: 1px; --pixel-shadow: 0px; }
+  :root[data-glass="forte"] { --pixel-border: 2px; --pixel-shadow: 0px; }
+
+/*
+ * tailwind.config.ts — o que muda em theme.extend:
+ *
+ *   fontFamily: {
+ *     sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Helvetica Neue', 'sans-serif'],
+ *       serif: ['Newsreader', 'New York', 'Georgia', 'serif'],
+ *       mono: ['JetBrains Mono', 'SF Mono', 'Menlo', 'monospace'],
+ *   },
+ *   borderRadius: { DEFAULT: '6px', sm: '4px', md: '6px', lg: '10px', xl: '14px' },
+ *
+ * - Hoje fontFamily.sans é "Segoe UI" (herança Windows) e mono é Cascadia: ambos saem.
+ * - boxShadow.glow pode sair (nenhuma das três direções usa brilho neon).
+ * - Cores ficam como estão: continuam lendo as mesmas variáveis.
+ */

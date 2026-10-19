@@ -136,6 +136,32 @@ Passos:
    você escolher; implementação pela camada de tokens (variáveis CSS + `tailwind.config.ts`).
 5. README/manual/screenshots no fim.
 
+## Andamento da Fase 2 (branch `fase-2/identidade`, 2026-10-19)
+
+- [x] Identidade num lugar só: `identidade.json` (nome, nome curto, bundle id = pasta de dados,
+      portas do engine/dev/celular, pasta de perfis, repositório, updater). Rust lê por
+      `crates/omni-protocol/build.rs` (`OMNI_ID_*` → `NOME_DO_PRODUTO`, `DATA_DIR`, portas,
+      `PASTA_DE_PERFIS`); interface por `src/lib/identidade.ts`; Tauri por sobreposição gerada em
+      `scripts/identidade.mjs` (`tauri build --config ...`), sem tocar no `tauri.conf.json` do autor.
+      Build local deriva (`+ " Local"`, `.local`, porta + 60). Valores ainda = os do autor.
+- [ ] Trocar valores quando o Enzo der o nome (só `identidade.json`). `pastaDePerfis` fica
+      `OMNI-AGENTS` de propósito: mantém os logins dos perfis extras já feitos.
+- [ ] `release.yml` (tauri-action) ainda não passa a sobreposição nem lê o nome: fazer junto do updater.
+- [ ] Updater: o Enzo roda `tauri signer generate` e cadastra a privada nos secrets; a pubkey vai
+      em `identidade.json` → `updater.pubkey`.
+- [ ] Ícones (`tauri icon`) depois da direção visual.
+- [x] 3 direções visuais em `roadmaps/fork/visual/direcoes.html` (Grafite, Sinal, Barro) +
+      `tokens-*.css` (mesmos nomes de variável do `src/index.css`). Para aplicar: paleta padrão em
+      `src/lib/palettes.ts`, fonte base do `body`, cores fixas do xterm em `TerminalPane.tsx`,
+      `--c-on-accent` no `.btn-primary`, fontes empacotadas (app offline).
+
+## Fase 3 — andamento
+
+- [x] `crates/omni-core/src/roteamento.rs` (branch `fase-3/roteamento`, a partir da `fase-1/macos`):
+      modelo de conta, `Politica` (`routing.json`), filtros duros, modos fila/auto,
+      `proxima_apos_falha` só headless, explicação com fonte/idade; `Cota::de_uso` reaproveita
+      `usage.rs`. 31 casos de teste em tabela. Falta: rotas no engine, tela, Novo agente, nó de fluxo.
+
 ## Plano da Fase 3 — fila de contas (aguarda a Fase 2 e o tipo da conta Team)
 
 1. `crates/omni-core/src/roteamento.rs` (novo): modelo de conta (`tipo`, `plano`, `janelas`,
