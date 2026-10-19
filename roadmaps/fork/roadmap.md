@@ -122,3 +122,15 @@ Passos:
    de fluxo (fecha "Escolher conta com uso disponível" em `roadmaps/orquestracao/roadmap.md`) e
    depois pelo Copiloto.
 4. Queda automática para a próxima conta só em execução headless; sessão interativa recebe aviso.
+
+## Pendências técnicas anotadas (não urgentes)
+
+- `crates/omni-engine/src/fluxos.rs` (`rodar_agente`): perfil Padrão no modo headless não limpa um
+  `CLAUDE_CONFIG_DIR` herdado (o PTY limpa quando o engine nasceu dentro de uma sessão do Claude).
+  Resolver junto com a escolha de conta da Fase 3.
+- Mesmo arquivo: stderr da CLI só é lido no fim; se a CLI escrever muito no stderr, o pipe enche e
+  a execução trava. Ler o stderr numa thread.
+- Slug do transcript não trata `/tmp` → `/private/tmp` (symlink do macOS); só afeta projeto em `/tmp`.
+- Atalhos usam Ctrl no macOS (pendência antiga do autor); Ctrl+C com seleção copia em vez de SIGINT.
+- Convenção: o andamento do fork fica em `roadmaps/fork/` e não ganha linha no
+  `roadmaps/omni-agents/roadmap.md` do autor, para o rebase não conflitar a cada release dele.
