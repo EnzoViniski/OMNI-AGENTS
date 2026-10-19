@@ -566,3 +566,8 @@ botão na faixa da conversa e na lateral; (c) composer no nó, aprovar/parar pel
       (`src-tauri/src/worktree.rs`, `<repo>/.omni-agents/worktrees/<branch>`, `.omni-agents/` no
       `info/exclude`); `AgentLaunch.cwd`, mantido na troca de conta. Testes `worktree::tests`,
       `AgentLauncher.branch.test.tsx`, `abrirLink.test.ts`.
+- [x] "+" no painel abre agente no projeto do painel (2026-10-19): aba ganhou `projectId` opcional
+      (`WorkspaceTab`, `CREATE_TAB`). `PaneView` usa o projeto da aba (ou o da conversa de outro projeto que o
+      painel mostra) no "+", no painel vazio e no `TerminalPane` (pasta e projeto do agente novo). Antes, com
+      conversas de outro projeto no layout, todo agente novo nascia no projeto dono do layout.
+      Testes `maisNoPainelDeOutroProjeto.test.tsx` e `conversaEntreProjetos.test.tsx`.
