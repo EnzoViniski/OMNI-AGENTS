@@ -171,7 +171,11 @@ ficam arquivadas.
 - [x] Gaveta "Uso" na barra de título, entra da direita (`GavetaDeUso.tsx`), reaproveita a lista do
       popover (`ListaDeUsoDasContas`, agora com Antigravity).
 - CSS do fork em `src/styles/fork.css` (fora do `index.css` do upstream).
-- [ ] Nome do produto (texto ao lado da logo ainda é "OMNI AGENTS").
+- [x] Nome: **Medza Agents** (2026-10-19). `identidade.json`: bundle id `ai.medza.agents`, portas
+      47421 (engine) / 47422 (celular) / 47441 (dev), repositório `EnzoViniski/OMNI-AGENTS`.
+      Updater aponta para o nosso `latest.json`, mas sem pubkey própria ainda (release não configurada).
+- O build Local de teste foi compilado com `OMNI_PASTA_DE_DADOS=com.omni.agents.local` e
+  `OMNI_PORTA_DO_ENGINE=47381` para manter os dados atuais do Enzo (`Medza Agents Local.app`).
 
 ## Fase 3 — andamento
 

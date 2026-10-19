@@ -41,6 +41,11 @@ node scripts/build-mac-local.mjs  # .app local isolado do app instalado (ver aba
 | App instalado (release do autor) | 47321 | `~/Library/Application Support/com.omni.agents` | `com.omni.agents` |
 | `npm run dev` (debug) | 47341 | `com.omni.agents.dev` | `com.omni.agents` |
 | `scripts/build-mac-local.mjs` | 47381 | `com.omni.agents.local` | `com.omni.agents.local` |
+| Medza Agents (release nossa, `identidade.json`) | 47421 | `ai.medza.agents` | `ai.medza.agents` |
+| Medza Agents dev | 47441 | `ai.medza.agents.dev` | — |
+
+Identidade do produto num lugar só: `identidade.json` (ver `scripts/identidade.mjs`). O build local
+deriva dela (`<bundleId>.local`, porta + 60) salvo `OMNI_PASTA_DE_DADOS`/`OMNI_PORTA_DO_ENGINE`.
 
 - Porta e pasta de release são constantes de `crates/omni-protocol` sobrescrevíveis **na
   compilação** por `OMNI_PORTA_DO_ENGINE` e `OMNI_PASTA_DE_DADOS` (app aberto pelo Finder não recebe
