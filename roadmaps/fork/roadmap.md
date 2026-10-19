@@ -59,6 +59,22 @@ Correções em branches pequenas a partir do `main` do autor (dá para oferecer 
 - [x] `macos/fonte-monoespacada`: terminal com Menlo/SF Mono (o genérico `monospace` do WebKit é
       Courier; Cascadia/Consolas não existem no Mac). `src/lib/fontes.ts`, teste `fontes.test.ts`.
 - [x] Reinício do engine quando o binário muda (`engine_binario_trocado`) verificado no `.app`.
+- [x] `macos/pastas-ocultas` (2026-10-19): log do `.app` local mostrou `forbidden path:
+      ~/omni/.claude/skills`. Causa: no Unix o plugin fs exige ponto literal no glob
+      (`require_literal_leading_dot` cai para `cfg!(unix)`), então o `**` do `fs:scope` não casava
+      `.claude/skills`, `~/.claude` (skills do perfil Padrão), `.env`, `.github`. Correção:
+      `plugins.fs.requireLiteralLeadingDot: false` em `tauri.conf.json`; teste
+      `src-tauri/tests/escopo_de_arquivos.rs` (falha sem a correção). **Falta ver no `.app`** (exige
+      recompilar o Local, o que derruba sessões rodando nele).
+- [x] `correcao/fluxos-sem-tela` (2026-10-19, a partir do `main` do autor): CLI headless dos fluxos
+      limpa `CLAUDE_CONFIG_DIR`/marcas herdadas de uma sessão do Claude e lê o stderr numa thread
+      (guarda os últimos 16 KB). Testes `cli_sem_tela_nao_herda_a_conta_da_sessao_do_claude` e
+      `stderr_grande_nao_trava_a_leitura_do_stdout`.
+- [ ] 0.7.2 no Mac: o `.app` Local aberto ainda é 0.7.1 (compilado antes do merge). Código do
+      Antigravity é portátil (`~/.gemini/antigravity-cli`, `agy` em `~/.local/bin` já está no PATH
+      ampliado), mas `agy` não está instalado nesta máquina: verificar exige instalar (software
+      global, perguntar) e login Google. Perguntas/imagens do agente: checar no `.app` recompilado.
+- Atenção: sessões do Claude abertas no "OMNI AGENTS Local" morrem quando ele é recompilado/reaberto.
 
 Pendente (precisa dos olhos do Enzo no app, roteiro abaixo): conversa com streaming, troca de
 modelo no selo, retomar sessão, dois perfis Claude com contas separadas, fechar/reabrir janela.
@@ -138,11 +154,8 @@ Passos:
 
 ## Pendências técnicas anotadas (não urgentes)
 
-- `crates/omni-engine/src/fluxos.rs` (`rodar_agente`): perfil Padrão no modo headless não limpa um
-  `CLAUDE_CONFIG_DIR` herdado (o PTY limpa quando o engine nasceu dentro de uma sessão do Claude).
-  Resolver junto com a escolha de conta da Fase 3.
-- Mesmo arquivo: stderr da CLI só é lido no fim; se a CLI escrever muito no stderr, o pipe enche e
-  a execução trava. Ler o stderr numa thread.
+- [x] `fluxos.rs`: `CLAUDE_CONFIG_DIR` herdado no headless e stderr em thread (ver Fase 1,
+  `correcao/fluxos-sem-tela`).
 - Slug do transcript não trata `/tmp` → `/private/tmp` (symlink do macOS); só afeta projeto em `/tmp`.
 - Atalhos usam Ctrl no macOS (pendência antiga do autor); Ctrl+C com seleção copia em vez de SIGINT.
 - Convenção: o andamento do fork fica em `roadmaps/fork/` e não ganha linha no
