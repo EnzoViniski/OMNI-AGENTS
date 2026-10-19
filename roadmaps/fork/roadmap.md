@@ -155,6 +155,24 @@ Passos:
       `src/lib/palettes.ts`, fonte base do `body`, cores fixas do xterm em `TerminalPane.tsx`,
       `--c-on-accent` no `.btn-primary`, fontes empacotadas (app offline).
 
+## Interface (branch `fase-2/interface`, 2026-10-19) — decisão do Enzo
+
+Manter a identidade visual do OMNI; trocar só a logo pela da Medza. Direções Grafite/Sinal/Barro
+ficam arquivadas.
+- [x] Logo Medza: `src/assets/marca/`, componente `MarcaDoProduto` no lugar do `OmniLogo`
+      (barra, web do celular, pareamento). Ícones do app gerados por `tauri icon` a partir de
+      `roadmaps/fork/marca/icone-do-app-1024.png`. Ícone da janela não é mais repintado com a paleta.
+- [x] Semáforos nativos do macOS: `src-tauri/tauri.macos.conf.json` (`titleBarStyle: Overlay`,
+      `trafficLightPosition` 14/20); `TitleBar` esconde os botões próprios no Mac (`src/lib/plataforma.ts`).
+      **Ver no `.app`**: posição vertical dos semáforos e arrasto da janela.
+- [x] Projetos como pastas com as conversas dentro, várias abertas, cor por agente
+      (`src/features/projects/PastasDeProjetos.tsx`, `src/lib/coresDosAgentes.ts`); seção CHATS saiu
+      da lateral. Clique numa conversa de outro projeto usa `FOCUS_SESSION`.
+- [x] Gaveta "Uso" na barra de título, entra da direita (`GavetaDeUso.tsx`), reaproveita a lista do
+      popover (`ListaDeUsoDasContas`, agora com Antigravity).
+- CSS do fork em `src/styles/fork.css` (fora do `index.css` do upstream).
+- [ ] Nome do produto (texto ao lado da logo ainda é "OMNI AGENTS").
+
 ## Fase 3 — andamento
 
 - [x] `crates/omni-core/src/roteamento.rs` (branch `fase-3/roteamento`, a partir da `fase-1/macos`):
