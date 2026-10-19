@@ -45,6 +45,8 @@ Correções em branches pequenas a partir do `main` do autor (dá para oferecer 
       (0 → 22 sequências SGR na abertura).
 - [x] `macos/copia-do-engine`: `build-engine.mjs` apaga antes de copiar o binário (sobrescrever um
       executável em uso faz o macOS matar o processo).
+- [x] `macos/fonte-monoespacada`: terminal com Menlo/SF Mono (o genérico `monospace` do WebKit é
+      Courier; Cascadia/Consolas não existem no Mac). `src/lib/fontes.ts`, teste `fontes.test.ts`.
 - [x] Reinício do engine quando o binário muda (`engine_binario_trocado`) verificado no `.app`.
 
 Pendente (precisa dos olhos do Enzo no app, roteiro abaixo): conversa com streaming, troca de
