@@ -571,3 +571,8 @@ botão na faixa da conversa e na lateral; (c) composer no nó, aprovar/parar pel
       painel mostra) no "+", no painel vazio e no `TerminalPane` (pasta e projeto do agente novo). Antes, com
       conversas de outro projeto no layout, todo agente novo nascia no projeto dono do layout.
       Testes `maisNoPainelDeOutroProjeto.test.tsx` e `conversaEntreProjetos.test.tsx`.
+- [x] Chat sem histórico, "nenhum transcript foi associado" (2026-10-19): a conta `enzo-medza` tinha
+      pasta em `<dados>/OMNI-AGENTS/profiles/claude/` mas não estava no `profiles.json` da variante Local;
+      `resolve_transcript` não achava a conta e desistia (e o chip mostrava "Padrão"). Agora
+      `omni_core::perfis_descobertos` junta as pastas de conta fora do registro (raiz definida no início
+      do engine e do app) e o `list_profiles` do app as grava de volta. Teste `perfis_orfaos`.
