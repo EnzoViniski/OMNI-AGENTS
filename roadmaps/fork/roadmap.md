@@ -576,3 +576,7 @@ botão na faixa da conversa e na lateral; (c) composer no nó, aprovar/parar pel
       `resolve_transcript` não achava a conta e desistia (e o chip mostrava "Padrão"). Agora
       `omni_core::perfis_descobertos` junta as pastas de conta fora do registro (raiz definida no início
       do engine e do app) e o `list_profiles` do app as grava de volta. Teste `perfis_orfaos`.
+- [x] Seletor de conta/modelo/esforço cortado no chat (2026-10-19): a lista do `Select` (`components/ui`)
+      era `absolute` dentro do painel e sumia no `overflow` dele, com a largura do botão. Agora vai para o
+      `body` (portal, `position: fixed` medida do botão), abre para cima quando falta espaço, largura pelo
+      texto (até 360 px) e realinha ao rolar/redimensionar. Teste `selectSobrePainel.test.tsx`.
