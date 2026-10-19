@@ -132,6 +132,17 @@ Verificação atual:
 3. Ações explícitas de clear/copy/paste no terminal.
 4. Command palette e persistência SQLite (continuam adiadas, retomar depois do item 1).
 
+### Ideia aprovada, não iniciada: prompt por voz (2026-10-18)
+Pedido do usuário: "inserir prompt falando". Desenho combinado (estilo OpenWhispr), **nada implementado ainda**:
+- [ ] **Modelo opcional**: Whisper local (whisper.cpp, ~75–150 MB) baixado só se a pessoa quiser, em
+  Configurações. **Sem o modelo baixado, a funcionalidade não aparece em lugar nenhum** (nem botão de microfone).
+- [ ] Gravação no app (PC, web do PC e celular); o áudio vai para o engine, que transcreve no PC — nada sai da máquina.
+  Celular/web: o navegador só libera microfone em HTTPS (o acesso hoje é `http://100.x` do Tailscale) — resolver antes.
+- [ ] Vocabulário do projeto como dica ao Whisper (`initial_prompt`: nomes de arquivos, "Tauri", "Claude"…) para errar menos termo técnico.
+- [ ] Correção da transcrição crua com IA (pontuação, hesitações, palavras trocadas, sem mudar o sentido).
+- [ ] O texto corrigido cai **no campo para revisar**; nunca envia sozinho.
+- Enquanto isso, no celular o microfone do próprio teclado (Gboard/iOS) já dita no campo.
+
 ## Múltiplos workspaces + painel de arquivos (entregue 2026-08-27)
 
 Pedido do usuário, fora do escopo original do MVP do spec (§14.3 marcava edição de arquivo como
@@ -3020,6 +3031,71 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
 - [x] 383 testes de front, 88 do engine, 47 do core e 23 do Tauri verdes.
 - [x] Publicada como release normal/latest (commit `a0cbcc6`, tag `v0.6.2`). CI e build verdes nas 3 plataformas; `latest.json` = 0.6.2, assinado; instalador Windows HTTP 200.
 
+### v0.7.2 (publicada 2026-10-19, commit `899bc43`)
+- [x] Reúne as seções abaixo marcadas "sem release" (perguntas do agente, imagens no chat, Mac, celular sem
+  arraste lateral) e o Antigravity da outra sessão. Commits: backend + Antigravity, front das perguntas/celular,
+  versão + notas. Verificado antes: tsc, 391 testes de front, 72 do core, 100 do engine, `cargo check` do Tauri.
+- [x] 1º CI falhou no Mac/Linux: teste de imagem citada com espaço no caminho (`/…` não aceitava espaço — o print
+  padrão do Mac tem espaço). Corrigido em `899bc43`, build cancelado e tag `v0.7.2` movida antes de publicar.
+- [x] CI e Release verdes nas 3 plataformas; publicada como latest; `latest.json` = 0.7.2 com assinatura nas 11
+  entradas; instaladores (exe, dmg, AppImage, app.tar.gz) HTTP 200.
+
+### macOS: conversa travada em "Entrada do CLI não reconhecida" (2026-10-18, entrou na 0.7.2)
+- [x] Relato de usuário no Mac: conversa sempre bloqueada, sem trocar modelo nem nada. Causa: o Claude Code
+  faz `process.title = <título da conversa>` (achado no binário 2.1.303); no macOS/Linux isso reescreve o
+  `args` do `ps`, e `provider_running` (não-Windows) só procurava `claude` no `args` → agente "não rodando",
+  `available=false`, tudo bloqueado. No Windows o title só muda a janela (lá a checagem é pelo `.exe`).
+  Agora `provider_running` lê também o `comm` (no macOS, caminho do executável, com espaços) —
+  `interaction.rs::agent_descends_from` + teste. `cargo check --target x86_64-unknown-linux-gnu` ok.
+  **Não testado num Mac de verdade**: confirmar com o usuário após a próxima release.
+
+### Pergunta do agente: lixo da conversa, prévia lado a lado e erro no clique (2026-10-19, sem release)
+- [x] **Causa raiz**: o `escolha()` lia `screen.contents()`, que junta linha quebrada por largura com a de
+  baixo. Depois de um turno, prompt destacado + borda + abas viravam uma linha (sem borda → a "pergunta" era
+  20 linhas da conversa); na prévia, a pergunta (largura toda) colava na opção "1." e o menu nem era
+  reconhecido. Agora `interaction::linha_a_linha` (`screen.rows`) alimenta o `escolha` (capabilities e execução).
+- [x] Borda no meio da linha também é separada; opções só da opção 1 para baixo (lista numerada antiga não
+  invalida mais o menu — era o 409 "Sessão ocupada…" intermitente no clique).
+- [x] Prévia (`preview`): desenho cortado do rótulo/explicação, "Notes:" e "Chat about this" sem número
+  ignorados. Ali o número só move a seleção → `Escolha.previa` ("to add notes") faz a execução mandar
+  número e, 150 ms depois, Enter. Sem prévia continua só o número (Enter extra cairia na tela seguinte).
+- [x] Front: 409 na escolha relê a tela e tenta uma vez se a mesma pergunta continua lá.
+- [x] Testes com as telas dos prints + conferido ao vivo (Claude real): prévia → "Empilhado", pergunta
+  normal depois de lista numerada → "Verde", nenhum erro no clique.
+
+### Web do celular arrastava para o lado (2026-10-18, sem release)
+- [x] Causa medida a 390 px: `.chat .bubble-agent` e `.chat .acoes` tinham `margin-left: 2.5rem` (coluna
+  do avatar) + `max-width: 100%` → 28 px além da tela. `max-width` agora desconta a margem
+  (`mobile.css`), e `pagina.css` trava a página com `overflow-x: clip` (não `hidden`, que quebraria o
+  `sticky`) + `overscroll-behavior-x: none`. Remedido: nada vaza, `scrollTo(300,…)` fica em 0.
+- [x] Cartão de pergunta (marcar várias + Continuar) e imagem citada conferidos ao vivo no web do celular
+  com Claude real (`/`, 390×844) — mesmo `ConversationDetail` do `/pc`.
+
+### Pergunta do agente na conversa (2026-10-17, sem release)
+- [x] **AskUserQuestion não aparecia na conversa** (só no terminal). O menu tem uma borda `────` antes de
+  "Chat about this" e o parser (`interaction::escolha`) começava a caixa na última borda, vendo só essa opção.
+  Agora a caixa começa na borda acima da opção 1, bordas internas e a barra de abas (☐/✔) são ignoradas, borda
+  colada na linha de baixo (linha cheia sem `
+` no texto do vt100) é separada, e "Type something." fica de fora
+  (abre um campo dentro do menu; "Chat about this" cobre resposta livre). Testes `pergunta_do_agente_vira_escolha`;
+  conferido com Claude Code 2.1.302 real no engine de teste: pergunta e opções certas, responder pela rota
+  `/escolher` segue a conversa.
+- [x] **Várias perguntas, revisão e marcar várias** (2026-10-18), todos conferidos ao vivo (2.1.302, engine de
+  teste + Playwright na web). Revisão final ("Ready to submit your answers?" / "1. Submit answers") vem sem rodapé
+  e agora é reconhecida. MultiSelect: opções `[ ]`/`[✔]` viram `marcada`; o número marca/desmarca e Tab segue —
+  nova resposta `{avancar: true}` (`Resposta::Avancar` em `mobile.rs`, só vale com `multipla`). `Escolha` ganhou
+  `multipla`, `etapas` (abas ☐/☒) e `descricao` por opção; `detalhe` agora é uma linha da tela por linha.
+- [x] **Cartão novo da pergunta** (`src/mobile/CartaoDePergunta.tsx`, CSS `.pergunta*` em `mobile.css`, vale no
+  app e na web): visual do campo de mensagem, uma opção por linha com a descrição, caixa de marcar, etapas com ✓,
+  revisão em lista, textos da CLI em português ("Responder com minhas palavras", "Enviar respostas").
+- [x] **Clique seguido no marcar-várias se perdia**: o menu redesenha depois de marcar e o próximo clique chegava
+  com a versão velha da tela (412). `post("escolher")` relê e tenta de novo só se a pergunta na tela é a mesma.
+- [x] **Imagem citada pelo agente vira imagem na conversa** (`feed::caminhos_de_imagem`): caminho absoluto de
+  `.png/.jpg/.jpeg/.gif/.webp` que existe (até 15 MB) no texto do agente conta em `Item::imagens` e sai pela rota
+  de sempre `/conversas/{id}/imagens/{n}/{k}` — a rota continua só com índices, o caminho vem do transcript.
+  Miniatura maior no balão do agente, abre ampliada. Conferido ao vivo. Obs.: colar um caminho de imagem no
+  prompt do Claude Code vira anexo `[Image #1]` (comportamento da CLI).
+
 ### v0.7.1 (publicada 2026-10-17, commit `902eec8`)
 - [x] Reúne orquestração (etapas 1–4), site/avisos/narração/instalador e o trabalho da outra sessão (resumo de
   agentes na lateral, tarefas pessoais, histórico no visual dos chats, shell com filho = ocupado, relatórios
@@ -3206,3 +3282,43 @@ Deixar claro nas Configurações que o acesso remoto serve para celular **e** ou
   A tela abre com o último resultado (localStorage `omni-relatorio-v1-<dias>`) e atualiza por trás.
   Visual: 6 cartões com ícone (tokens do período, % de cache, dias com uso/sequência, linhas +/−),
   títulos com ícone, "Git por projeto" com ícone de branch, último commit e +/− da IA.
+- [x] **Antigravity CLI (`agy`) como agente** (2026-10-18). Provider `antigravity` (binário `agy`, conferido
+  na 1.4.2 instalada aqui): abre em conversa/terminal como o Cursor, botão de instalar
+  (`irm https://antigravity.google/cli/install.ps1 | iex` / `install.sh`), PATH ampliado com
+  `%LOCALAPPDATA%\agy\bin`, ícone em pixel, rótulo nas conversas. Só a conta nativa: o token fica no
+  cofre do SO e o `agy` não aceita trocar o diretório de config, então não há contas extras nem troca
+  automática. "Conectado" = existe `~/.gemini/antigravity-cli/settings.json` (já configurado; `ponytail:` em
+  `profiles.rs`). Fora por enquanto: fluxos (executor só Claude/Codex), histórico/relatórios (formato dos
+  arquivos de conversa não documentado), retomar com troca de modelo/conta.
+  - Testado de verdade (2026-10-18, logado): `agy -p ... --output-format json` respondeu `SUCCESS` (11,7 mil
+    tokens, 21 s). Conversas ficam em `~/.gemini/antigravity-cli/conversations/<id>.db` (SQLite, não JSONL);
+    `settings.json` guarda `trustedWorkspaces` → `ensure_agent_trust` agora inclui o projeto antes de abrir
+    (`trust_antigravity` em `src-tauri/src/engine_client.rs`), como o Claude.
+- [x] **Antigravity: visão Conversa, uso e seleção 2×2/4** (2026-10-18). Telas reais do agy 1.4.2 enviadas pelo
+  usuário + leitura de cópias dos `.db`.
+  - Conversa: `crates/omni-core/src/antigravity.rs` lê `conversations/<id>.db` (SQLite, passos em protobuf sem
+    schema: 14 = você `19.2`, 15 = resposta `20.1`, ação = `5.4.2` + resumo `140.1`, hora `5.1`) com `rusqlite`
+    (bundled); `descobrir` acha a conversa da sessão pelo `conversation_summaries.db` (pasta + criada depois do
+    início). `conversations.rs` resolve/descobre/lê o `.db`. Conferido num `.db` real (acentos ok).
+  - Tela: `provider_running` procurava `antigravity.exe` (o binário é `agy.exe`) → nada era reconhecido. `ready`
+    pelo rodapé "? for shortcuts", turno por "esc to cancel" (`in_turn` agora por provider), pergunta
+    `ask_question` vira escolha (setas + Enter; "Write-in..." fora). Aprovação de ferramenta ainda não
+    reconhecida (sem tela real): fica no terminal.
+  - Uso: `parse_antigravity_screen` (painel "Models & Quota", grupo Gemini; mostra o que **resta**, guardamos o
+    usado); engine digita `/usage` num agy ocioso ou num oculto na pasta do engine (confiada antes) e guarda
+    `uso-antigravity-<conta>.json`.
+  - Seleção de agentes: 4 colunas ou 2×2 por container query (`.launcher-agentes`).
+- [x] **Antigravity: Conversa mostrava a conversa antiga** (2026-10-19). Ao reabrir (engine reiniciado no
+  `npm run dev`), o agy começava conversa nova e o ponteiro ficava na primeira. Agora cada sessão abre com
+  `--log-file <config>/log/omni-<sessão>.log` (conferido: o log traz "Created conversation <id>" /
+  "Starting conversation update stream for <id>"); `conversa_da_sessao` lê a conversa atual por ele (cobre
+  `/clear`), o ponteiro é reconferido sempre, e reiniciar/restaurar reabre com `--conversation <id>`.
+  Campo "não reconhecido": motivo detalhado por condição do `ready` (`motivo_antigravity`, temporário) para
+  calibrar com a próxima tela real.
+- [x] **Antigravity: trocar modelo e esforço** (2026-10-19). Pesquisa no agy 1.4.2: `agy models` lista variantes
+  com o esforço no nome (`gemini-4-argon-high`); `--model <família> --effort <nível>` escolhe a variante (recusa
+  esforço inexistente); `--conversation <id> --model …` retoma a mesma conversa com outro modelo (testado: lembrou
+  a 1ª mensagem); o log da sessão grava `label="… (High)"`. Implementado: `omni_core::antigravity::{familias,
+  familia_e_esforco, modelo_da_sessao}`; engine guarda o `agy models` por 1 dia (`modelos-antigravity.txt`),
+  `/opcoes` lista famílias com seus esforços e o modelo atual; `comando_de_retomada` monta
+  `agy --model … --effort … --conversation <id>` e o reinício preserva. Conta: só a nativa (seletor some).
