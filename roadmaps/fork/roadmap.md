@@ -3,6 +3,17 @@
 > Missão em `~/omni/PROMPT-OMNI-MISSAO.md`. Guia técnico em `docs/fork/CLAUDE.md`.
 > Registrar aqui o andamento de cada fase (sessões podem ser substituídas; isto não).
 
+## Repositório e upstream (2026-10-19)
+
+- `origin` = fork público `EnzoViniski/OMNI-AGENTS` (criado pelo Enzo). `upstream` = Felipe.
+- Fork no GitHub **não se atualiza sozinho**. Estratégia: `main` do `origin` = nosso produto;
+  novidades do Felipe entram por `git fetch upstream && git merge upstream/main` (merge, não rebase:
+  histórico compartilhado com o sócio), seguido da verificação completa.
+- 0.7.2 do Felipe (agente Antigravity, perguntas/imagens do agente) já mesclada em `fase-1/macos`
+  (conflito só em `crates/omni-core/src/lib.rs`, dois `pub mod` novos). Testes: Vitest 393, Rust 158,
+  Tauri 25.
+- Prompt de continuação para rodar dentro do OMNI: `~/omni/PROMPT-OMNI-CONTINUACAO.md`.
+
 ## Decisões pendentes do Enzo
 
 - [ ] Conta do GitHub e nome do repositório; público ou privado; nome do produto (Fase 2).
