@@ -208,3 +208,19 @@ ficam arquivadas.
 - Atalhos usam Ctrl no macOS (pendência antiga do autor); Ctrl+C com seleção copia em vez de SIGINT.
 - Convenção: o andamento do fork fica em `roadmaps/fork/` e não ganha linha no
   `roadmaps/omni-agents/roadmap.md` do autor, para o rebase não conflitar a cada release dele.
+
+## Persistência e Antigravity (2026-10-19)
+
+- [x] Antigravity "travado" para trocar modelo: o alvo `safari13` do Vite fazia o esbuild apagar a
+      declaração de variável do `requestMode` do xterm 6 → `ReferenceError: t` quando a CLI consulta um
+      modo (DECRQM) e a resposta nunca chegava. Alvo agora `safari14` (`vite.config.ts`; o macOS 11
+      mínimo já tem Safari 14). Erro aparecia no `app.log` como `ui erro_nao_tratado`.
+- [x] O "Novo agente" lembra o último agente e a conta usada em cada um; o modelo/esforço aplicado
+      por último em cada agente entra nas conversas novas (`src/lib/escolhasSalvas.ts`, chave
+      `medza-escolhas` no localStorage).
+- Por que "tudo sumia" hoje: cada build trocou de identidade (OMNI AGENTS Local → Medza com pasta
+  `com.omni.agents.local` → Medza com `ai.medza.agents.local`). localStorage é por bundle id e
+  sessões/contas são por pasta de dados. Daqui em diante, manter `ai.medza.agents.local` (build
+  local sem `OMNI_PASTA_DE_DADOS`). O estado antigo segue em `com.omni.agents.local` (não migrado).
+- Pendente: modo de permissão não é guardado (só shift+tab na CLI); abas em segundo plano só
+  revivem ao serem selecionadas; Codex reaberto pelo terminal começa conversa nova.
