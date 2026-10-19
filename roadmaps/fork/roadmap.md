@@ -80,3 +80,45 @@ Achados até agora (reprodução com o engine de dev num ambiente igual ao do Fi
   `permission-mode` batem com o que `crates/omni-core/src/runtime.rs` lê.
 - Perfil Padrão não define `CLAUDE_CONFIG_DIR` (Keychain da conta nativa); extras definem (Keychain
   próprio por pasta), o isolamento previsto.
+
+## Plano da Fase 2 — nosso produto (aguarda aprovação e as respostas acima)
+
+Fatos que pesam na decisão (docs oficiais, 2026-10-19):
+- Fork de repositório público é **sempre público**; não dá para mudar a visibilidade de um fork
+  sozinho ([GitHub Docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-permissions-and-visibility-of-forks)).
+  Para privado: repositório novo privado (`gh repo create --private`) recebendo nossas branches,
+  com o autor só como remoto `upstream` (rebase periódico continua igual).
+- Repo privado: o updater não baixa `latest.json` de release privada sem token. Opções:
+  (a) repositório **público só de releases** (binários + `latest.json`), código privado;
+  (b) atualização manual pelo `.dmg`. Recomendo (a).
+- `gh` está logado na conta `EnzoViniski`.
+
+Passos:
+1. Repositório (fork público ou cópia privada) + `origin`; push das branches `fase-*` e `macos/*`
+   (só depois do seu ok). Lembrete: avisar o Felipe do fork; MIT e créditos preservados.
+2. Identidade num lugar só: nome do produto, bundle id novo (= pasta de dados nova), **porta padrão
+   própria** (as constantes de `omni-protocol` já aceitam isso), título da janela, nome no código
+   como constante. Os dados do app do autor ficam intactos; importação opcional de perfis/workspace
+   com backup antes.
+3. Updater próprio: `tauri signer generate` (a chave privada você cadastra nos secrets do GitHub;
+   nunca passa pelo chat), pubkey e endpoint novos em `tauri.conf.json`, workflow de release
+   adaptado (só macOS arm64/universal + o que vocês usarem).
+4. Ícones novos (`tauri icon` a partir de uma imagem-base) e 2–3 direções visuais em mockup para
+   você escolher; implementação pela camada de tokens (variáveis CSS + `tailwind.config.ts`).
+5. README/manual/screenshots no fim.
+
+## Plano da Fase 3 — fila de contas (aguarda a Fase 2 e o tipo da conta Team)
+
+1. `crates/omni-core/src/roteamento.rs` (novo): modelo de conta (`tipo`, `plano`, `janelas`,
+   `uso_extra`, `orcamento`, `expira_em`, `max_concorrencia`, `apelido`), fila de etapas
+   (`routing.json` no diretório do engine), filtros duros (política de dados do projeto, orçamento,
+   uso extra, concorrência, limite estourado) e os modos `fila` e `auto`. Função de escolha pura,
+   com testes em tabela (cada filtro, cada modo, conta repetida, reset de janela) e a explicação
+   "por que esta conta".
+2. Fonte de cota: o que o OMNI já lê (`/usage` do Claude, `rate_limits` do Codex); quando não houver,
+   "desconhecido" + fonte + idade do dado. Preços por modelo em arquivo editável, nunca no código.
+3. Rotas no engine (arquivo novo, chamado por uma linha no `mobile.rs`), tela
+   `src/features/roteamento/` em Configurações → "Fila de contas", e uso pelo "Novo agente", pelo nó
+   de fluxo (fecha "Escolher conta com uso disponível" em `roadmaps/orquestracao/roadmap.md`) e
+   depois pelo Copiloto.
+4. Queda automática para a próxima conta só em execução headless; sessão interativa recebe aviso.
