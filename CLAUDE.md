@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+> **Fork (Enzo e sócio):** leia primeiro @docs/fork/CLAUDE.md — comandos verificados no macOS,
+> isolamento entre app instalado/dev/build local, log em disco e regras duras. Onde divergir, ele manda.
+
 > **Projeto atual: OMNI AGENTS.** A especificação vigente é `spec.md` e o roadmap ativo é
 > `roadmaps/omni-agents/roadmap.md`. O conteúdo CAMPS-UTILS abaixo é histórico herdado e só deve
 > ser consultado quando ajudar a entender infraestrutura preservada (Tauri, updater e temas).
